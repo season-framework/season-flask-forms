@@ -1,0 +1,21 @@
+mixin content()
+    .page
+        {$ view $}
+
+    style.
+        html,
+        body {
+            overflow: auto;
+            background: white;
+        }
+
+        body {
+            padding: 32px;
+        }
+
+        .page {
+            background: transparent;
+        }
+
+include theme/layout-empty
++layout
