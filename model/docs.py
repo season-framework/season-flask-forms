@@ -83,7 +83,7 @@ class Model(season.core.interfaces.model.MySQL):
                     <h4>신청자</h4>
                     </div>
                     <div class="col-md-10"> 
-                    <div class="p-1">{o}{o}doc.user.name_ko{e}{e}</div>
+                    <div class="p-1">{o}{o}doc.user.name{e}{e}</div>
                     </div>
                 </div>
                 <div class="info-form row">
@@ -136,7 +136,7 @@ class Model(season.core.interfaces.model.MySQL):
                         <h4>신청자</h4>
                         </div>
                         <div class="col-md-10"> 
-                        <div class="p-1">{o}{o}doc.user.name_ko{e}{e}</div>
+                        <div class="p-1">{o}{o}doc.user.name{e}{e}</div>
                         </div>
                     </div>
                     <div class="info-form row">
@@ -204,7 +204,7 @@ class Model(season.core.interfaces.model.MySQL):
                             <div class="col-md-3">
                                 <div class="card mb-4">
                                     <div class="card-header">
-                                        <div class="card-title">{o}{o}doc.user.name_ko{e}{e}</div>
+                                        <div class="card-title">{o}{o}doc.user.name{e}{e}</div>
                                     </div>
                                     <div class="card-body text-left" style="height: 120px; overflow: auto;">
                                         문서 제출
@@ -218,7 +218,7 @@ class Model(season.core.interfaces.model.MySQL):
                                 <div class="card mb-4" ng-repeat="approval in line">
                                     <div class="ribbon ribbon-top ribbon-bookmark bg-green" ng-if="approval.status.status == 'ready' && approval.user.id != doc.user_id"></div>
                                     <div class="card-header">
-                                        <div class="card-title">{o}{o}approval.user.name_ko{e}{e}</div>
+                                        <div class="card-title">{o}{o}approval.user.name{e}{e}</div>
                                     </div>
                                     <div class="card-body text-left" style="height: 120px; overflow: auto;">
                                         <div class="text-left" ng-if="approval.user.id != doc.user_id && ['reject', 'finish'].includes(approval.status.status)">{o}{o}approval.status.response{e}{e}</div>
@@ -445,9 +445,8 @@ class Model(season.core.interfaces.model.MySQL):
             for j in range(len(doc["approval_line_info"][i])):
                 uid = doc["approval_line_info"][i][j]
                 obj = dict()
-                obj['user'] = framework.model("mysql/users").get(id=uid)
+                obj['user'] = {"id": uid, "name": uid}
                 if userinfo is not None: obj['user'] = userinfo(framework, uid)
-                else: obj['user'] = {"id": uid}
                 status = model_process.get(doc_id=doc_id, user_id=uid)
                 if status is not None:
                     try:

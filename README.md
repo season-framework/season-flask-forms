@@ -5,7 +5,7 @@
 ## Installation
 
 ```bash
-sf module import form --uri https://github.com/season-framework/season-flask-form
+sf module import form --uri https://github.com/season-framework/season-flask-forms
 ```
 
 ## Configuration
