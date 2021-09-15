@@ -7,7 +7,7 @@ class Controller(season.interfaces.form.controller.api):
         super().__startup__(framework)
         self.framework = framework
 
-        # acl
+        # check access level
         doc_id = framework.request.segment.get(0, True)
         doc = self.model.docs.data(doc_id)
         if doc is None: self.status(404)
@@ -19,197 +19,172 @@ class Controller(season.interfaces.form.controller.api):
     def __default__(self, framework):
         framework.response.abort(404)
 
-    def __error__(self, framework):
-        self.status(500, "오류가 발생하였습니다.")
+    def __error__(self, framework, e):
+        self.status(500, framework.dic.form.API.ERROR)
 
     def delkey(self, obj, key):
         if key in obj:
             del obj[key]
 
-    # 임시저장
+    # save draft
     def draft(self, framework):
         data = dict()
         data["id"] = self.doc["id"]
         data["title"] = framework.request.query("title", "")
+        try: data["approval_line"] = json.dumps(framework.request.query("title", []), default=season.json_default)
+        except: data["approval_line"] = "[]"
         self.model.docs.upsert(data)
-
+        
         data = dict()
         data["doc_id"] = self.doc["id"]
         data["user_id"] = self.config.uid(framework)
+        data["seq"] = 0
+        data["subseq"] = 0
         data["status"] = "draft"
         data["data"] = framework.request.query("data", "{}")
         data["response"] = ""
+        if type(data["data"]) != str: data["data"] = json.dumps(data["data"], season.json_default)
         self.model.process.upsert(data)
-        self.status(200, "저장되었습니다.")
 
-    # 제출
+        self.status(200, framework.dic.form.API.SAVED)
+
+    # Submit
     def submit(self, framework):
         formapi = self.formapi
         doc = self.doc
 
         data = dict()
-        data["id"] = doc["id"]
         data["title"] = framework.request.query("title", "")
-        self.model.docs.upsert(data)
+        try: data["approval_line"] = json.dumps(framework.request.query("title", []), default=season.json_default)
+        except: data["approval_line"] = "[]"
+        self.model.docs.update(data, id=doc["id"])
 
+        # onsubmit event
         approval_line = self.model.docs.approval_line(self.doc["id"])
-        self.doc["approval_line"] = approval_line
-        formapi["onsubmit"](framework, doc, self.status)
-
-        draft = self.doc["draft"]
-        self.delkey(draft, "timestamp")
-        draft['status'] = "ready"
+        doc["approval_line"] = approval_line
+        if 'onsubmit' in formapi:
+            formapi["onsubmit"](framework, doc, self.status)
         
-        createcount = 0
-        for item in approval_line:
-            for uid in item:
-                if uid == self.config.uid(framework): continue
-                draft['data'] = json.dumps(draft['data'])
+        # status change
+        draft = doc["draft"]
+        self.delkey(draft, "timestamp")
+        try: draft['data'] = json.dumps(draft['data'], default=season.json_default)
+        except Exception as e: draft['data'] = "{}"
+        
+        for seq in range(len(approval_line)):
+            if seq == 0: continue
+            draft['status'] = "ready"
+            if seq > 1: draft['status'] = "pending"
+            for subseq in range(len(approval_line[seq])):
+                uid = approval_line[seq][subseq]
+                draft['seq'] = seq * 10
+                draft['subseq'] = subseq
                 draft['user_id'] = uid
                 self.model.process.upsert(draft)
-                createcount = createcount + 1
-            if createcount > 0:
-                break
         
         data = dict()
-        data["id"] = self.doc["id"]
-        data["approval_line"] = json.dumps(approval_line)
-        if createcount == 0:
+        if len(approval_line) == 1:
             data["status"] = "finish"
-            formapi["onfinish"](framework, doc, self.status)
+            if 'onfinish' in formapi:
+                formapi["onfinish"](framework, doc, self.status)
         else:
             data["status"] = "process"
-        self.model.docs.upsert(data)
-        
-        self.status(200, "저장되었습니다.")
 
-    # 승인
+        self.model.docs.update(data, id=self.doc["id"])
+        self.status(200, framework.dic.form.API.SUBMIT)
+
+    # Approve
     def approve(self, framework):
         formapi = self.formapi
         doc = self.doc
 
-        data = dict()
-        data["doc_id"] = doc["id"]
-        data["user_id"] = self.config.uid(framework)
+        data = self.model.process.get(doc_id=doc['id'], status='ready', user_id=self.config.uid(framework))
+        if data is None:
+            self.status(401, "잘못된 접근입니다.")
+
         data["status"] = "finish"
         data["response"] = framework.request.query("response", "")
+        del data['timestamp']
         self.model.process.upsert(data)
 
-        aline = doc["approval_line_info"]
-        for i in range(len(aline)):
-            allcount = len(aline[i])
-            approvecount = 0
-            iscreated = False
-            try:
-                for j in range(len(aline[i])):
-                    auser = aline[i][j]["user"]["id"]
-                    if auser == self.config.uid(framework):
-                        approvecount += 1
-                        continue
+        readycount = len(self.model.process.rows(doc_id=doc['id'], status='ready'))
+        if readycount > 0:
+            if 'onapprove' in formapi:
+                formapi["onapprove"](framework, doc, self.status)
+            self.status(200, framework.dic.form.API.APPROVE)
 
-                    if aline[i][j]["status"] == False:
-                        iscreated = True
-                        draft = self.doc["draft"]
-                        draft['status'] = "ready"
-                        draft['user_id'] = auser
-                        draft['data'] = json.dumps(draft['data'])
-                        self.model.process.upsert(draft)
-                    else:
-                        status = aline[i][j]["status"]["status"]
-                        if status == "finish":
-                            approvecount += 1
-            except:
-                pass
-
-            if approvecount == allcount and i == len(aline) - 1:
-                data = dict()
-                data["id"] = doc["id"]
-                data["status"] = "finish"
+        pendings = self.model.process.rows(doc_id=doc['id'], status='pending', orderby="`seq` ASC, `subseq` ASC")
+        #  if pending not exists, end document
+        if len(pendings) == 0:
+            data = dict()
+            data["status"] = "finish"
+            self.model.docs.update(data, id=doc["id"])
+            if 'onfinish' in formapi:
                 formapi["onfinish"](framework, doc, self.status)
-                self.model.docs.upsert(data)
-                break
+            self.status(200, framework.dic.form.API.APPROVE)
 
-            if iscreated:
-                break
+        preseq = None
+        for pending in pendings:
+            seq = int(pending['seq'])
+            if preseq is None: preseq = seq
+            if preseq != seq: break
             
-            if approvecount != allcount:
-                break
+            data = pending
+            data["status"] = "ready"
+            del data['timestamp']
+            self.model.process.upsert(data)
+            preseq = seq
 
-        formapi["onapprove"](framework, doc, self.status)
-        self.status(200, "승인됨")
+        if 'onapprove' in formapi:
+            formapi["onapprove"](framework, doc, self.status)
 
-    # 반려
+        self.status(200, framework.dic.form.API.APPROVE)
+
+    # Reject
     def reject(self, framework):
         formapi = self.formapi
         doc = self.doc
 
-        data = dict()
-        data["doc_id"] = doc["id"]
-        data["user_id"] = self.config.uid(framework)
+        data = self.model.process.get(doc_id=doc['id'], status='ready', user_id=self.config.uid(framework))
+        if data is None:
+            self.status(401, "잘못된 접근입니다.")
+
         data["status"] = "reject"
         data["response"] = framework.request.query("response", "")
+        del data['timestamp']
         self.model.process.upsert(data)
 
         data = dict()
-        data["id"] = doc["id"]
         data["status"] = "reject"
-        self.model.docs.upsert(data)
+        self.model.docs.update(data, id=doc["id"])
 
-        aline = doc["approval_line_info"]
-        iscancel = False
-        for i in range(len(aline)):
-            try:
-                for j in range(len(aline[i])):
-                    auser = aline[i][j]["user"]["id"]
-                    if auser == self.config.uid(framework):
-                        iscancel = True
-                        continue
-                
-                if iscancel:
-                    for j in range(len(aline[i])):
-                        auser = aline[i][j]["user"]["id"]
-                        if auser == self.config.uid(framework):
-                            continue
+        data = dict()
+        data["status"] = "cancel"
+        self.model.process.update(data, doc_id=doc["id"], status="pending")
+        self.model.process.update(data, doc_id=doc["id"], status="ready")
 
-                        draft = self.doc["draft"]
-                        draft['status'] = "cancel"
-                        draft['user_id'] = auser
-                        draft['data'] = json.dumps(draft['data'])
-                        self.model.process.upsert(draft)
-            except:
-                pass
+        if 'onreject' in formapi:
+            formapi["onreject"](framework, doc, self.status)
 
-        formapi["onreject"](framework, doc, self.status)
         self.status(200, True)
 
-    # 회수
+    # Cancel
     def cancel(self, framework):
+        formapi = self.formapi
         doc = self.doc
 
         if doc['user_id'] != self.config.uid(framework):
             self.status(401, True)
 
         data = dict()
-        data["id"] = doc["id"]
         data["status"] = "cancel"
-        self.model.docs.upsert(data)
+        self.model.docs.update(data, id=doc["id"])
 
-        draft = self.doc["draft"]
-        draft['data'] = json.dumps(draft['data'])
-        
-        aline = doc["approval_line_info"]
-        for i in range(len(aline)):
-            try:
-                for j in range(len(aline[i])):
-                    auser = aline[i][j]["user"]["id"]
-                    process = self.model.process.get(user_id=auser, doc_id=doc['id'])
-                    if process is not None and process['status'] != 'ready':
-                        continue
-                    
-                    draft['status'] = "cancel"
-                    draft['user_id'] = auser
-                    self.model.process.upsert(draft)
-            except:
-                pass
+        data = dict()
+        data["status"] = "cancel"
+        self.model.process.update(data, doc_id=doc["id"], status="pending")
+        self.model.process.update(data, doc_id=doc["id"], status="ready")
 
+        if 'oncancel' in formapi:
+            formapi["oncancel"](framework, doc, self.status)
         self.status(200, True)

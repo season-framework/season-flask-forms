@@ -20,6 +20,7 @@ class view:
         self.model.form = framework.model("form", module="form")
         self.model.docs = framework.model("docs", module="form")
         self.model.process = framework.model("process", module="form")
+        self.model.template = framework.model("template", module="form")
 
         self.config.acl(framework)
         
@@ -83,6 +84,7 @@ class view:
         framework.response.data.set(submenus=menus)
     
     def status(self, status_code=200, data=dict()):
+        if type(data) == season.dicClass: data = str(data)
         res = season.stdClass()
         res.code = status_code
         res.data = data
@@ -132,6 +134,11 @@ class admin(view):
         super().__startup__(framework)
         if self.config.admin_acl(framework) == False:
             framework.response.abort(401)
+
+        menus = []
+        menus.append({ 'title': "Forms", 'url': f'/form/admin/form' , 'pattern': r'^/form/admin/form' })
+        menus.append({ 'title': "Templates", 'url': f'/form/admin/template' , 'pattern': r'^/form/admin/template' })
+        self.nav(menus)
 
 class admin_api(admin):
     def __startup__(self, framework):

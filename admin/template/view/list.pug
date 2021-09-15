@@ -1,0 +1,48 @@
+mixin content()
+    .container.pt-4.pb-4
+        .page-header
+            .row.align-items-center
+                .col-auto
+                    .page-pretitle SEASON eForm Platform
+                    h2.page-title Templates
+
+                .col-auto.ml-auto.d-print-none
+                    .d-flex
+                        input.form-control(type="text" placeholder="Search..." ng-model="search.text" ng-enter="event.search()")
+                        a.btn.btn-light.ml-2.d-none.d-sm-inline-block(href='#' style="width: 200px;" ng-click="event.search()")
+                            i.mr-2.fas.fa-search
+                            | Search
+                        a.btn.btn-light.pr-4.pl-4.ml-2(href='/form/admin/template/editor/new' style="width: 200px;") 
+                            i.mr-2.fas.fa-plus
+                            | Create
+
+        .overflow-x
+            table.table.board-table.table-hover
+                thead 
+                    tr
+                        th.text-center.width-1 ID
+                        th.text-center Title
+
+                tbody
+                    tr(ng-repeat="item in list")
+                        td.text-center.width-1
+                            a(ng-href="/form/admin/template/editor/{{item.id}}") {{item.id}}
+                        td
+                            a(ng-href="/form/admin/template/editor/{{item.id}}") {{item.displayname}}
+            
+            .pagenation.text-center(ng-if="facet.pages.length > 0")
+                button.btn.btn-square.btn-sm.btn-light.pt-1.pb-1(ng-click="event.page(1)")
+                    i.fas.fa-angle-double-left
+                button.btn.btn-square.btn-sm.btn-light.pt-1.pb-1(ng-click="event.page(search.page*1-1)")
+                    i.fas.fa-angle-left
+
+                button.btn.btn-square.btn-sm(ng-repeat="page in facet.pages" ng-class="page == search.page ? 'btn-dark' : ''" ng-click="event.page(page)")= ng('page')
+
+                button.btn.btn-square.btn-sm.btn-light.pt-1.pb-1(ng-click="event.page(search.page*1+1)")
+                    i.fas.fa-angle-right
+                button.btn.btn-square.btn-sm.btn-light.pt-1.pb-1(ng-click="event.page(facet.lastpage)")
+                    i.fas.fa-angle-double-right
+                
+                       
+include form/theme/layout
++layout

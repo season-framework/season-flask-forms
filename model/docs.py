@@ -5,6 +5,9 @@ import lesscpy
 from six import StringIO
 import pypugjs
 
+dummy = '{"code":200,"data":{"id":"dummy","form_id":"dummy","form_version":"master","user_id":"john","title":"2021-09-15","approval_line":[["john"],["stella","jessy"],["jane"],["proin"]],"status":"process","timestamp":"2021-09-15 22:06:40","user":{"id":"john","name":"John Doe"},"action":"view","draft":{"doc_id":"dummy","user_id":"john","seq":0,"subseq":0,"status":"draft","data":{"date":"2021-09-15","list":[{"user":"stella"},{"user":"jessy"}],"price":22222},"response":"","timestamp":"2021-09-15 22:06:39"},"approval_line_info":[[{"doc_id":"dummy","user_id":"john","seq":0,"subseq":0,"status":"draft","data":{"date":"2021-09-15","list":[{"user":"stella"},{"user":"jessy"}],"price":22222},"response":"","timestamp":"2021-09-15 22:06:39","user":{"id":"john","name":"John Doe"}}],[{"doc_id":"dummy","user_id":"stella","seq":10,"subseq":0,"status":"ready","data":{"date":"2021-09-15","list":[{"user":"stella"},{"user":"jessy"}],"price":22222},"response":"","timestamp":"2021-09-15 22:06:40","user":{"id":"stella","name":"Stella Kim"}},{"doc_id":"dummy","user_id":"jessy","seq":10,"subseq":1,"status":"ready","data":{"date":"2021-09-15","list":[{"user":"stella"},{"user":"jessy"}],"price":22222},"response":"","timestamp":"2021-09-15 22:06:40","user":{"id":"jessy","name":"Jessy"}}],[{"doc_id":"dummy","user_id":"jane","seq":20,"subseq":0,"status":"pending","data":{"date":"2021-09-15","list":[{"user":"stella"},{"user":"jessy"}],"price":22222},"response":"","timestamp":"2021-09-15 22:06:40","user":{"id":"jane","name":"Jane"}}],[{"doc_id":"dummy","user_id":"proin","seq":30,"subseq":0,"status":"pending","data":{"date":"2021-09-15","list":[{"user":"stella"},{"user":"jessy"}],"price":22222},"response":"","timestamp":"2021-09-15 22:06:40","user":{"id":"proin","name":"Yeonghun Chae"}}]],"build":{"users":[{"id":"proin","name":"Yeonghun Chae"},{"id":"stella","name":"Stella Kim"},{"id":"jessy","name":"Jessy"},{"id":"jane","name":"Jane"},{"id":"john","name":"John Doe"}]}}}'
+dummy = json.loads(dummy)["data"]
+
 class Model(season.core.interfaces.model.MySQL):
     def __init__(self, framework):
         super().__init__(framework)
@@ -21,6 +24,28 @@ class Model(season.core.interfaces.model.MySQL):
         form_version = doc['form_version']
         return model.form.api(form_id, form_version)
 
+    def compile_pug(self, html):
+        framework = self.framework
+        config = framework.config.load("form")
+        try:
+            pugconfig = {}
+            if config.pug is not None: pugconfig = config.pug
+            pug = pypugjs.Parser(html)
+            pug = pug.parse()
+            html = pypugjs.ext.jinja.Compiler(pug, **pugconfig).compile()
+        except Exception as e:
+            pass
+        return html
+
+    def readfile(self, path):
+        try:
+            f = open(path, 'r')
+            data = f.read()
+            f.close()
+            return data
+        except:
+            return ""
+
     def render(self, doc_id):
         framework = self.framework
         config = framework.config.load("form")
@@ -30,6 +55,7 @@ class Model(season.core.interfaces.model.MySQL):
 
         model = season.stdClass()
         model.form = framework.model('form', module="form")
+        model.template = framework.model('template', module="form")
 
         doc = self.get(id=doc_id)
         if doc is None:
@@ -40,307 +66,55 @@ class Model(season.core.interfaces.model.MySQL):
         doc_status = doc['status']
         
         form = model.form.get(id=form_id, version=form_version)
-
+        
+        # is valid form
         if form is None: 
             return ""
-
-        form_title = form["title"]
-
-        # 권한 확인
+            
+        # check access level
         docdata = self.data(doc_id)
         if docdata is None:
             return ""
 
-        html = form["html_view"]
-        if doc_status == 'draft': html = form["html"]
-        try:
-            pug = pypugjs.Parser(html)
-            pug = pug.parse()
-            pug = pypugjs.ext.jinja.Compiler(pug).compile()
-            html = framework.response.template_from_string(pug)
-        except:
-            pass
-
-        button = ""
-        header = f"""
-            <div class="container">
-                <div class="info-form row first-child">
-                    <div class="col-md-2"> 
-                        <h4>문서번호</h4>
-                    </div>
-                    <div class="col-md-6"> 
-                        <div class="p-1">{o}{o}doc.id{e}{e}</div>
-                    </div>
-                    <div class="col-md-2"> 
-                        <h4>결재상태</h4>
-                    </div>
-                    <div class="col-md-2"> 
-                        <div class="p-1">{o}{o}statusmap[doc.status]{e}{e}</div>
-                    </div>
-                </div>
-                <div class="info-form row">
-                    <div class="col-md-2"> 
-                    <h4>신청자</h4>
-                    </div>
-                    <div class="col-md-10"> 
-                    <div class="p-1">{o}{o}doc.user.name{e}{e}</div>
-                    </div>
-                </div>
-                <div class="info-form row">
-                    <div class="col-md-2"> 
-                    <h4>신청일자</h4>
-                    </div>
-                    <div class="col-md-10"> 
-                    <div class="p-1">{o}{o}doc.timestamp{e}{e}</div>
-                    </div>
-                </div>
-                <div class="info-form row">
-                    <div class="col-md-2"> 
-                        <h4>문서제목</h4>
-                    </div>
-                    <div class="col-md-10"> 
-                        <div class="p-1">{o}{o}doc.title{e}{e}</div>
-                    </div>
-                </div>
-            </div> 
-        """
-
-        procstatus = ""
-        response_message = ""
-
-        if doc_status == 'draft':
-            button = f"""
-                <button class="btn btn-light pr-4 pl-4 ml-2" ng-click="event.delete()"><i class="mr-2 fas fa-times"></i>삭제</button>
-                <button class="btn btn-light pr-4 pl-4 ml-2" ng-click="event.save()"><i class="mr-2 fas fa-save"></i>임시저장</button>
-                <button class="btn btn-dark pr-4 pl-4 ml-2" ng-click="event.submit()"><i class="mr-2 fas fa-paper-plane"></i>제출</button>
-            """
-            
-            header = f"""
-                <div class="container">
-                    <div class="info-form row first-child">
-                        <div class="col-md-2"> 
-                            <h4>문서번호</h4>
-                        </div>
-                        <div class="col-md-6"> 
-                            <div class="p-1">{o}{o}doc.id{e}{e}</div>
-                        </div>
-                        <div class="col-md-2"> 
-                            <h4>결재상태</h4>
-                        </div>
-                        <div class="col-md-2"> 
-                            <div class="p-1">{o}{o}statusmap[doc.status]{e}{e}</div>
-                        </div>
-                    </div>
-                    <div class="info-form row">
-                        <div class="col-md-2"> 
-                        <h4>신청자</h4>
-                        </div>
-                        <div class="col-md-10"> 
-                        <div class="p-1">{o}{o}doc.user.name{e}{e}</div>
-                        </div>
-                    </div>
-                    <div class="info-form row">
-                        <div class="col-md-2"> 
-                        <h4>신청일자</h4>
-                        </div>
-                        <div class="col-md-10"> 
-                        <div class="p-1">{o}{o}doc.timestamp{e}{e}</div>
-                        </div>
-                    </div>
-                    <div class="info-form row">
-                        <div class="col-md-2"> 
-                            <h4>문서제목</h4>
-                        </div>
-                        <div class="col-md-10"> 
-                            <input class="form-control" type="text" ng-model="doc.title" placeholder="문서제목"/>
-                        </div>
-                    </div>
-                </div> 
-            """
-
-        if docdata["action"] == "process":
-            response_message = f"""
-                <div class="container">
-                    <div class="info-form row first-child bg-dark-lt">
-                        <div class="col-md-2">
-                        <h4>응답메시지</h4>
-                        </div>
-                        <div class="col-md-10"> 
-                        <textarea class="form-control" rows="5" ng-model="doc.response"></textarea>
-                        </div>
-                    </div>
-                </div>
-            """
-
-            button = f"""
-                <button class="btn btn-light pr-4 pl-4 ml-2" ng-click="event.reject()"><i class="mr-2 fas fa-times"></i>반려</button>
-                <button class="btn btn-dark pr-4 pl-4 ml-2" ng-click="event.approve()"><i class="mr-2 fas fa-check-circle"></i>승인</button>
-            """
-
-        if doc_status != 'draft':
-            procstatus = f"""
-                <div class="container">
-                    <div class="info-form row first-child">
-                        <div class="col-md-2">
-                        <h4>결재현황</h4>
-                        </div>
-                        <div class="col-md-10">
-                        <div class="row row-deck row-cards" ng-if="doc.approval_line_info.length == 0">
-                            <div class="col-md-3">
-                            <div class="card mb-4">
-                                <div class="card-header">
-                                <div class="card-title">결재없음</div>
-                                </div>
-                                <div class="card-body text-left" style="height: 120px; overflow: auto;">
-                                <div class="text-left">결재가 필요 없는 문서입니다</div>
-                                </div>
-                                <div class="card-footer">
-                                <button class="btn btn-green btn-block">결재없음</button>
-                                </div>
-                            </div>
-                            </div>
-                        </div>
-                        <div class="row mt-4" ng-if="doc.approval_line_info.length &gt; 0">
-                            <div class="col-md-3">
-                                <div class="card mb-4">
-                                    <div class="card-header">
-                                        <div class="card-title">{o}{o}doc.user.name{e}{e}</div>
-                                    </div>
-                                    <div class="card-body text-left" style="height: 120px; overflow: auto;">
-                                        문서 제출
-                                    </div>
-                                    <div class="card-footer">
-                                        <button class="btn btn-secondary btn-block">제출</button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3" ng-repeat="line in doc.approval_line_info">
-                                <div class="card mb-4" ng-repeat="approval in line">
-                                    <div class="ribbon ribbon-top ribbon-bookmark bg-green" ng-if="approval.status.status == 'ready' && approval.user.id != doc.user_id"></div>
-                                    <div class="card-header">
-                                        <div class="card-title">{o}{o}approval.user.name{e}{e}</div>
-                                    </div>
-                                    <div class="card-body text-left" style="height: 120px; overflow: auto;">
-                                        <div class="text-left" ng-if="approval.user.id != doc.user_id && ['reject', 'finish'].includes(approval.status.status)">{o}{o}approval.status.response{e}{e}</div>
-                                        <div class="text-left" ng-if="approval.user.id != doc.user_id && approval.status.status == 'ready'">결재 대기중 입니다</div>
-                                        <div class="text-left" ng-if="approval.user.id != doc.user_id && approval.status.status == 'cancel'">결재가 취소되었습니다</div>
-                                        <div class="text-left" ng-if="approval.user.id == doc.user_id">자동승인됨</div>
-                                    </div>
-                                    <div class="card-footer" ng-if="approval.user.id == doc.user_id">
-                                    <button class="btn btn-green btn-block">자동승인</button>
-                                    </div>
-                                    <div class="card-footer" ng-if="approval.user.id != doc.user_id">
-                                        <button class="btn btn-secondary btn-block" ng-if="approval.status.status == 'ready'">결재대기</button>
-                                        <button class="btn btn-green btn-block" ng-if="approval.status.status == 'finish'">승인</button>
-                                        <button class="btn btn-red btn-block" ng-if="approval.status.status == 'reject'">반려</button>
-                                        <button class="btn btn-secondary btn-block" ng-if="approval.status.status == 'cancel'">취소</button>
-                                        <button class="btn btn-secondary btn-block" ng-if="!approval.status">대기</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        </div>
-                    </div>
-                </div>
-            """
-
-        if button == "" and docdata['user_id'] == config.uid(framework) and docdata['status'] == 'process':
-            button = f"""
-                <button class="btn btn-light pr-4 pl-4 ml-2" ng-click="event.cancel()"><i class="mr-2 fas fa-undo"></i>회수</button>
-            """
+        # find status
+        if doc_status != 'draft': 
+            if docdata["action"] == "process":
+                doc_status = "process"
+            else:
+                doc_status = "view"
         
-        html = f"""
-            <div class="container" id='form-controller' ng-controller='form-container-controller'>
-                <div class="page-header">
-                    <div class="row align-items-center">
-                        <div class="col-auto">
-                            <div class="page-pretitle">전자결재</div>
-                            <h2 class="page-title">{form_title}</h2>
-                        </div>
-                        <div class="col-auto ml-auto d-print-none">
-                            {button}
-                        </div>
-                    </div>
-                </div>
-            
-                {header}
-
-                <div id='form-{form_id}' ng-controller='form-{form_id}'>
-                    {html}
-                </div>
-
-                {procstatus}
-
-                {response_message}
-                
-                <div class="container mt-4 text-center">{button}</div>
-
-            </div>
-        """
+        # select view by level
+        html = form["html_view"]
+        if doc_status == 'draft':
+            html = form["html"]
+        html = self.compile_pug(html)
+        html = framework.response.template_from_string(html)
 
         js = form["js"]
-        
         css = form["css"]
         css = f"#form-{form_id} {o} {css} {e}"
         css = lesscpy.compile(StringIO(css), minify=True)
         css = str(css)
-        
-        view = f"""
-        {html}
-        <script src='/resources/form/season-form.js'></script>
-        <script>
-            var sform = season_form('{form_id}', '{doc_id}', '{form_version}'); 
-            
-            try {o}
-                app.controller('form-container-controller', form_container_controller);
-            {e} catch (e) {o}
-                app.controller('form-container-controller', function() {o}{e});
-            {e}
+                
+        # form variables
+        kwargs = dict()
+        kwargs['doc_id'] = doc_id
+        kwargs['form_id'] = form_id
+        kwargs['form_version'] = form_version
+        kwargs['form_title'] = form["title"]
+        kwargs['view'] = html
+        kwargs['js'] = js
+        kwargs['css'] = css
+        kwargs['allow_cancel'] = False
+        if docdata['user_id'] == config.uid(framework) and docdata['status'] == 'process':
+            kwargs['allow_cancel'] = True
 
-            function __init_{form_id}() {o}
-                {js}; 
-                try {o} 
-                    app.controller('form-{form_id}', form_controller); 
-                {e}  catch (e) {o} 
-                    app.controller('form-{form_id}', function() {o} {e} ); 
-                {e} 
-            {e}; 
-            __init_{form_id}();
-        </script>
-        <style>{css}</style>
-        """
-        
-        return view
+        # build view
+        return model.template.render(form["theme"], doc_status, **kwargs)
         
     def approval_line(self, doc_id):
-        framework = self.framework
-        config = framework.config.load("form")
-
-        doc = self.get(id=doc_id)
-        if doc is None:
-            return []
-
-        model_form = framework.model("form", module="form")
-        formapi = model_form.api(doc["form_id"], doc["form_version"])
-        approval_line = json.loads(doc["approval_line"])
-
-        usercheck = dict()
-        usercheck[config.uid(framework)] = True
-        
         doc = self.data(doc_id)
-        aline = formapi['approval_line'](framework, doc)
-        for i in range(len(aline)):
-            _line = []
-            for j in range(len(aline[i])):
-                if aline[i][j] is not None:
-                    if aline[i][j] in usercheck:
-                        continue
-                    usercheck[aline[i][j]] = True
-                    _line.append(aline[i][j])
-            if len(_line) > 0:
-                approval_line.append(_line)
-            
-        return approval_line
+        return doc['approval_line']
 
     def create(self, form_id, form_version=None, user_id=None):
         framework = self.framework   
@@ -351,7 +125,7 @@ class Model(season.core.interfaces.model.MySQL):
         if user_id is None: 
             user_id = config.uid(framework)
 
-        # 신규 문서 작성시 기초자료
+        # base info for new doc
         form = None
         form = model_form.get(id=form_id, version=form_version)
         if form is None:
@@ -359,6 +133,7 @@ class Model(season.core.interfaces.model.MySQL):
             if len(form) > 1: 
                 form = form[1]
         
+        # new doc id creator
         def id_builder():
             newid = datetime.datetime.now().strftime("%Y") + "-" + form['category'] + "-" + framework.lib.util.randomstring(12)
             res = self.get(id=newid)
@@ -379,8 +154,7 @@ class Model(season.core.interfaces.model.MySQL):
         doc['form_version'] = form["version"]
         doc['user_id'] = user_id
         doc['status'] = 'draft'
-        approval_line = "[]"
-        doc['approval_line'] = approval_line
+        doc['approval_line'] = "[]"
         
         self.upsert(doc)
         doc = self.get(id=doc_id)
@@ -388,84 +162,152 @@ class Model(season.core.interfaces.model.MySQL):
 
     def data(self, doc_id, user_id=None):
         framework = self.framework
+
+        if doc_id == "dummy":
+            return dummy
+
         config = framework.config.load("form")
-        
         model_form = framework.model("form", module="form")
         model_process = framework.model("process", module="form")
 
+        # load options
         document_acl = config.get('document_acl', None)
-        userinfo = config.get('userinfo', None)
+        userinfofn = config.get('userinfo', None)
+
         if user_id is None: 
             user_id = config.uid(framework)
 
-        # 문서 정보 불러오기
+        # load doc info
         doc = self.get(id=doc_id)
         if doc is None:
             return None
 
         form_id = doc['form_id']
         version = doc['form_version']
+        formapi = model_form.api(form_id, version)
 
-        if userinfo is not None: 
-            doc['user'] = userinfo(framework, doc['user_id'])
-        else: 
-            doc['user'] = {"id": doc['user_id']}
-    
-        # 결재라인 자료형 변환
-        doc["approval_line_info"] = json.loads(doc["approval_line"])
-        doc["approval_line"] = json.loads(doc["approval_line"])
-        
+        # load doc user info 
+        try:
+            doc['user'] = userinfofn(framework, doc['user_id'])
+        except:
+            doc['user'] = {"id": doc['user_id'], "name": doc['user_id']}
+            
+        # load access level info
         doc['action'] = model_process.get(doc_id=doc_id, user_id=user_id, status="ready")
         if doc['action'] is not None: doc['action'] = "process"
         else: doc['action'] = "view"
 
-        # 작성안 불러오기
+        # load draft info
         draft = model_process.get(doc_id=doc_id, status="draft")
 
-        # 초안이 없는 경우 작성자인 경우 초안 자동 생성
+        # if draft not exist
         if doc['user_id'] == user_id and draft is None:
             draft = dict()
             draft["doc_id"] = doc_id
             draft["user_id"] = user_id
+            draft["seq"] = 0
+            draft["subseq"] = 0
             draft["status"] = "draft"
             draft["data"] = "{}"
             draft["response"] = ""
             model_process.upsert(draft)
             draft = model_process.get(doc_id=doc_id, status="draft")
-        
         try:
             draft["data"] = json.loads(draft["data"])
         except:
             draft["data"] = {}
-
         doc["draft"] = draft
 
-        # 결재 상황 불러오기
-        for i in range(len(doc["approval_line_info"])):
-            for j in range(len(doc["approval_line_info"][i])):
-                uid = doc["approval_line_info"][i][j]
-                obj = dict()
-                obj['user'] = {"id": uid, "name": uid}
-                if userinfo is not None: obj['user'] = userinfo(framework, uid)
-                status = model_process.get(doc_id=doc_id, user_id=uid)
-                if status is not None:
-                    try:
-                        status['data'] = json.loads(status['data'])
-                    except:
-                        status['data'] = {}
-                else:
-                    status = False
-                obj['status'] = status
-                doc["approval_line_info"][i][j] = obj
+        # load process
+        processes = model_process.rows(doc_id=doc_id, orderby="`seq` ASC, `subseq` ASC")
+        pre_seq = None
+        tmp = []
+        lineobj = []
+        for proc in processes:
+            try:
+                proc['data'] = json.loads(proc['data'])
+            except:
+                proc['data'] = {}
+            try:
+                proc['user'] = userinfofn(framework, proc['user_id'])
+            except:
+                proc['user'] = {"name": proc['user_id']}
+            proc['user']['id'] = proc['user_id']
+            if pre_seq != proc['seq']:
+                if len(lineobj) > 0: tmp.append(lineobj)
+                lineobj = []
+            lineobj.append(proc)
+            pre_seq = proc['seq']
+        if len(lineobj) > 0: tmp.append(lineobj)
+        doc["approval_line_info"] = tmp
 
-        formapi = model_form.api(form_id, version)
+        # load default approval lines
+        approval_line = [[user_id]]
+
+        def check_user(uid):
+            try:
+                exists = config.userinfo(framework, uid)
+            except:
+                exists = None
+            if exists is not None: 
+                return True
+            return False
+
+        # load additional approval line
+        try:
+            additional_approval_line = json.loads(doc["approval_line"])
+        except:
+            additional_approval_line = []
+        for i in range(len(additional_approval_line)):
+            _line = []
+            for j in range(len(additional_approval_line[i])):
+                if additional_approval_line[i][j] is not None:
+                    uid = additional_approval_line[i][j]
+                    if check_user(uid):
+                        _line.append(uid)
+            if len(_line) > 0:
+                approval_line.append(_line)
+
+        # required approval line
+        required_approval_line = formapi['approval_line'](framework, doc)
+        for i in range(len(required_approval_line)):
+            _line = []
+            for j in range(len(required_approval_line[i])):
+                if required_approval_line[i][j] is not None:
+                    uid = required_approval_line[i][j]
+                    if check_user(uid):
+                        _line.append(uid)
+            if len(_line) > 0:
+                approval_line.append(_line)
+
+        if len(doc["approval_line_info"]) >= len(approval_line):
+            approval_line = []
+            for i in range(len(doc["approval_line_info"])):
+                _line = []
+                for j in range(len(doc["approval_line_info"][i])):
+                    uid = doc["approval_line_info"][i][j]["user_id"]
+                    _line.append(uid)
+                if len(_line) > 0:
+                    approval_line.append(_line)
+                
+        doc["approval_line"] = approval_line
+
         doc["build"] = formapi['build'](framework, doc)
 
-        # 문서 권한 확인
+        # check customized document access level
         if document_acl is not None:
             if document_acl(framework, doc):
                 return doc
         
+        # formapi acl
+        if 'acl' in formapi:
+            try:
+                if formapi['acl'](framework, doc):
+                    return doc
+            except:
+                pass
+
+        # check authorized
         authorized = model_process.get(doc_id=doc_id, user_id=user_id)
         if doc['user_id'] != user_id and authorized is None:
             return None

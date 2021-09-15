@@ -54,6 +54,15 @@ var season_form = function (form_id, doc_id, version) {
         return obj.cache.doc.draft.data;
     }
 
+    obj.title = function () {
+        if (obj.$scope) {
+            if (obj.$scope.title) {
+                return obj.$scope.title();
+            }
+        }
+        return "";
+    }
+
     obj.delete = function (cb) {
         fn(API.DOC.DELETE, {}, cb);
     };
@@ -119,88 +128,4 @@ var season_form = function (form_id, doc_id, version) {
     }
 
     return obj;
-};
-
-var form_container_controller = function ($sce, $scope, $timeout) {
-    $scope.statusmap = { 'draft': '작성중', 'process': '진행중', 'finish': '완료', 'reject': '반려', 'cancel': '취소' };
-    $scope.doc = null;
-    sform.init(function (doc) {
-        $scope.doc = doc;
-        var tmp = [];
-        for (var i = 0; i < $scope.doc.approval_line_info.length; i++) {
-            var obj = [];
-            for (var j = 0; j < $scope.doc.approval_line_info[i].length; j++) {
-                obj.push($scope.doc.approval_line_info[i][j]);
-            }
-
-            if (obj.length > 0) {
-                tmp.push(obj);
-            }
-        }
-
-        $scope.doc.approval_line_info = tmp;
-        $timeout();
-    });
-
-    $scope.event = {};
-
-    $scope.event.save = function (cb) {
-        var data = sform.data();
-        sform.draft($scope.doc.title, data, function (res) {
-            if (res.code == 200) {
-                if (cb) return cb(res);
-                return toastr.success(res.data);
-            }
-            return toastr.error(res.data);
-        });
-    };
-
-    $scope.event.submit = function () {
-        $scope.event.save(function () {
-            sform.submit($scope.doc.title, function (res) {
-                if (res.code == 200) {
-                    return location.reload();
-                }
-                return toastr.error(res.data)
-            });
-        });
-    };
-
-    $scope.event.approve = function () {
-        sform.approve($scope.doc.response, function (res) {
-            if (res.code == 200) {
-                return location.reload();
-            }
-            return toastr.error(res.data);
-        });
-    };
-
-    $scope.event.reject = function () {
-        sform.reject($scope.doc.response, function (res) {
-            if (res.code == 200) {
-                return location.reload();
-            }
-            return toastr.error(res.data);
-        });
-    };
-
-    $scope.event.cancel = function () {
-        sform.cancel(function (res) {
-            console.log(res);
-            if (res.code == 200) {
-                return location.reload();
-            }
-            return toastr.error(res.data);
-        });
-    };
-
-    $scope.event.delete = function () {
-        sform.delete(function (res) {
-            if (res.code == 200) {
-                location.href = "/eform/mylist";
-                return;
-            }
-            return toastr.error(res.data);
-        });
-    };
 };

@@ -1,0 +1,198 @@
+mixin codearea(tab)
+    div(ng-show="options.tab.{$tab$}_val == 'draft'" ng-model="info.draft" ui-monaco-opts="monaco('pug')" ui-monaco)
+    div(ng-show="options.tab.{$tab$}_val == 'process'" ng-model="info.process" ui-monaco-opts="monaco('pug')" ui-monaco)
+    div(ng-show="options.tab.{$tab$}_val == 'view'" ng-model="info.view" ui-monaco-opts="monaco('pug')" ui-monaco)
+    div(ng-show="options.tab.{$tab$}_val == 'js'" ng-model="info.js" ui-monaco-opts="monaco('javascript')" ui-monaco)
+    div(ng-show="options.tab.{$tab$}_val == 'css'" ng-model="info.css" ui-monaco-opts="monaco('less')" ui-monaco)
+
+    .code-preview(ng-if="options.tab.{$tab$}_val == 'preview'" style="max-width: none; width: 100%; height: 100%;")
+        iframe.preview(style="height: 100%;" ng-hide="status_drag == 'unselectable'")
+        table(ng-if="status_drag == 'unselectable'" style="width: 100%; height: 100%;")
+            tr 
+                td(style="text-align: center; vertical-align: middle;")
+                    .spinner-grow.text-blue(style="width: 120px; height: 120px;")
+
+mixin codeselect(tab)
+    - if tab != 'tab5'
+        button.btn.btn-square.btn-sm.mr-1(ng-if="options.view == 'draft'" ng-click="options.tab.{$tab$}_val = 'draft'" ng-class="options.tab.{$tab$}_val == 'draft' ? 'btn-white' : 'btn-dark'") PUG
+        button.btn.btn-square.btn-sm.mr-1(ng-if="options.view == 'process'" ng-click="options.tab.{$tab$}_val = 'process'" ng-class="options.tab.{$tab$}_val == 'process' ? 'btn-white' : 'btn-dark'") PUG
+        button.btn.btn-square.btn-sm.mr-1(ng-if="options.view == 'view'" ng-click="options.tab.{$tab$}_val = 'view'" ng-class="options.tab.{$tab$}_val == 'view' ? 'btn-white' : 'btn-dark'") PUG
+        button.btn.btn-square.btn-sm.mr-1(ng-click="options.tab.{$tab$}_val = 'js'" ng-class="options.tab.{$tab$}_val == 'js' ? 'btn-white' : 'btn-dark'") JS
+        button.btn.btn-square.btn-sm.mr-1(ng-click="options.tab.{$tab$}_val = 'css'" ng-class="options.tab.{$tab$}_val == 'css' ? 'btn-white' : 'btn-dark'") CSS
+        button.btn.btn-square.btn-sm.mr-1(ng-click="options.tab.{$tab$}_val = 'preview'; event.iframe();" ng-class="options.tab.{$tab$}_val == 'preview' ? 'btn-white' : 'btn-dark'") Preview
+    - else
+        button.btn.btn-square.btn-sm.mr-1(ng-click="options.tab.{$tab$}_val = 'preview'; event.iframe();" ng-class="options.tab.{$tab$}_val == 'preview' ? 'btn-white' : 'btn-dark'") Preview ({{options.view}})
+
+mixin content()
+    .fixed-top
+        header.navbar.navbar-expand-md.navbar-dark
+            .container(style="max-width: none;")
+                button.navbar-toggler(type='button' data-toggle='collapse' data-target='#navbar-menu')
+                    span.navbar-toggler-icon
+
+                a.navbar-brand.navbar-brand-autodark.d-none-navbar-horizontal.pr-0.pr-md-3
+                    div(style='color: #7d7c83;')
+                        img.mr-2(src='/resources/theme/img/logo-white.png' style='height: 32px;')
+
+                #navbar-menu.navbar.navbar-collapse.collapse
+                    ul.navbar-nav
+                    .navbar-nav.flex-row.order-md-last.mr-2(style="align-items: center;")
+                        li.nav-item.p-0.pr-2
+                            a.nav-link.btn.btn-sm.text-dark.btn-white.btn-pill(ng-click="event.modal.delete()")
+                                span.nav-link-title(style="font-size: 14px;") Delete
+
+                        li.nav-item.p-0.pr-2
+                            a.nav-link.btn.btn-sm.text-dark.btn-white.btn-pill(ng-click="event.save()")
+                                span.nav-link-title(style="font-size: 14px;") Save
+
+                        li.nav-item.p-0
+                            a.nav-link.btn.btn-sm.text-dark.btn-white.btn-pill(href='/form/admin/template')
+                                span.nav-link-title.bold(style="font-size: 14px;")
+                                    i.fas.fa-times
+
+    .panel-layout(class="{{options.sidemenu ? 'sidemenu-on' : 'sidemenu-off'}}" ng-class="status_drag")
+        .panel-menu.bg-dark
+            .menu-layout.p-3
+                h3.text-white.mb-3 
+                    i.fas.fa-bars.mr-2(ng-click="event.toggle.sidemenu()")
+                    span.minify Template Editor
+
+                .card.card-sm.mb-3.minify
+                    .card-body
+                        label.form-label Title
+                        input.form-control(type='text' placeholder='Title' ng-model="info.displayname")
+
+                .card.card-sm.mb-3.minify
+                    .card-body
+                        label.form-label Status
+                        .text-center
+                            .btn.mr-1(class="{{options.view == 'draft' ? 'btn-dark' : 'btn-outline-dark'}}" ng-click="event.view('draft')") Draft
+                            .btn.mr-1(class="{{options.view == 'process' ? 'btn-dark' : 'btn-outline-dark'}}" ng-click="event.view('process')") Process
+                            .btn(class="{{options.view == 'view' ? 'btn-dark' : 'btn-outline-dark'}}" ng-click="event.view('view')") Viewer
+
+                .hr.bg-white.minify
+                
+                h3.text-white.minify Layout
+
+                .text-center.mb-4
+                    .layout-selector.p-2(ng-class="options.layout == 1 ? 'active' : ''" ng-click="options.layout = 1")
+                        .layout-icon
+                            .layout-row
+                                .layout-column
+
+                    .layout-selector.p-2(ng-class="options.layout == 2 ? 'active' : ''" ng-click="options.layout = 2")
+                        .layout-icon
+                            .layout-row
+                                .layout-column
+                                .layout-column
+
+                    .layout-selector.p-2(ng-class="options.layout == 3 ? 'active' : ''" ng-click="options.layout = 3")
+                        .layout-icon
+                            .layout-row
+                                .layout-column
+                                .layout-column
+                                .layout-column
+                    
+                    .layout-selector.p-2(ng-class="options.layout == 4 ? 'active' : ''" ng-click="options.layout = 4")
+                        .layout-icon
+                            .layout-row
+                                .layout-column
+                                .layout-column
+                                .layout-column
+                                .layout-column
+
+                    .layout-selector.p-2(ng-class="options.layout == 5 ? 'active' : ''" ng-click="options.layout = 5; event.iframe();")
+                        .layout-icon.rows-2
+                            .layout-row
+                                .layout-column
+                            .layout-row
+                                .layout-column
+
+                    .layout-selector.p-2(ng-class="options.layout == 6 ? 'active' : ''" ng-click="options.layout = 6; event.iframe();")
+                        .layout-icon.rows-2
+                            .layout-row
+                                .layout-column
+                                .layout-column
+                            .layout-row
+                                .layout-column
+
+                    .layout-selector.p-2(ng-class="options.layout == 7 ? 'active' : ''" ng-click="options.layout = 7; event.iframe();")
+                        .layout-icon.rows-2
+                            .layout-row
+                                .layout-column
+                                .layout-column
+                                .layout-column
+                            .layout-row
+                                .layout-column
+
+                    .layout-selector.p-2(ng-class="options.layout == 8 ? 'active' : ''" ng-click="options.layout = 8; event.iframe();")
+                        .layout-icon.rows-2
+                            .layout-row
+                                .layout-column
+                                .layout-column
+                                .layout-column
+                                .layout-column
+                            .layout-row
+                                .layout-column
+                
+        .panel-context
+            .p-0.pt-2.bg-dark
+                table.w-100.code-tabs.code-tabs-top
+                    tr
+                        td.tab-1.text-center(ng-if="[1,2,3,4,5,6,7,8].includes(options.layout)")
+                            +codeselect('tab1')
+                        td.tab-2.text-center(ng-if="[2,3,4,6,7,8].includes(options.layout)")
+                            +codeselect('tab2')
+                        td.tab-3.text-center(ng-if="[3,4,7,8].includes(options.layout)")
+                            +codeselect('tab3')
+                        td.tab-4.text-center(ng-if="[4,8].includes(options.layout)")
+                            +codeselect('tab4')
+
+            .code-container(ng-class="[5,6,7,8].includes(options.layout) ? 'h-half' : 'h-full'")
+                table.w-100.code-table
+                    tr.code-tr.code-top
+                        td.tab-1.bg-white(ng-if="[1,2,3,4,5,6,7,8].includes(options.layout)")
+                            .code-input(style='height: 100%;')
+                                +codearea('tab1')
+
+                        td.gutter.g-1(ng-if="[2,3,4,6,7,8].includes(options.layout)" target="tab-1" ng-drag="event.drag")
+                        td.tab-2.bg-white(ng-if="[2,3,4,6,7,8].includes(options.layout)")
+                            .code-input(style='height: 100%;')
+                                +codearea('tab2')
+
+                        td.gutter.g-2(ng-if="[3,4,7,8].includes(options.layout)" target="tab-2" ng-drag="event.drag")
+                        td.tab-3.bg-white(ng-if="[3,4,7,8].includes(options.layout)")
+                            .code-input(style='height: 100%;')
+                                +codearea('tab3')
+
+                        td.gutter.g-3(ng-if="[4,8].includes(options.layout)" target="tab-3" ng-drag="event.drag")
+                        td.tab-4.bg-white(ng-if="[4,8].includes(options.layout)")
+                            .code-input(style='height: 100%;')
+                                +codearea('tab4')
+
+                    tr.gutter.g-t(ng-if="[5,6,7,8].includes(options.layout)" target="tab-5" ng-drag="event.drag")
+                        td(colspan="{$ng('(options.layout - 4) + (options.layout - 5)')$}")
+
+                    tr.code-tr.code-bottom(ng-if="[5,6,7,8].includes(options.layout)")
+                        td.tab-5(colspan="{$ng('(options.layout - 4) + (options.layout - 5)')$}")
+                            .code-input(style='height: 100%;')
+                                +codearea('tab5')
+
+            .p-0.pt-2.bg-dark
+                table.w-100.code-tabs
+                    tr
+                        td.tab-5.text-right(ng-if="[5,6,7,8].includes(options.layout)")
+                            +codeselect('tab5')
+    
+    #modal-delete.modal.fade(tabindex="-1")
+        .modal-dialog.modal-sm(role='document')
+            .modal-content
+                .modal-body
+                    .modal-title Delete
+                    div You can't do that if you delete it. Wasn't it deleted?
+                .modal-footer
+                    button.btn.btn-link.link-secondary.mr-auto(type='button' data-dismiss='modal') Cancel
+                    button.btn.btn-danger(type='button' ng-click="event.delete()") Delete
+
+include form/theme/layout-empty
++layout

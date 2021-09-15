@@ -11,10 +11,9 @@ class Controller(season.interfaces.form.controller.api):
         framework.response.abort(404)
 
     def data(self, framework):
-        doc_id = framework.request.segment.get(0, True)
-        doc = self.model.docs.data(doc_id)        
+        doc_id = framework.request.segment.get(0, True)            
+        doc = self.model.docs.data(doc_id)
         if doc is None: self.status(404)
-        
         self.status(200, doc)
 
     def delete(self, framework):
