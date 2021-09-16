@@ -82,9 +82,8 @@ class Controller(season.interfaces.form.controller.admin):
             category = self.config.category
         except:
             pass
-        if cate is None:
-            return framework.response.redirect('list/' + category[0])
-        menus = []
+        
+        menus = [{'title' : 'Total', 'url': '/form/admin/form/list'}]
         for c in category:
             menus.append({ 'title': c, 'url': f'/form/admin/form/list/{c}' , 'pattern': r'^/form/admin/form/list/' + c })
         self.subnav(menus)
@@ -96,7 +95,8 @@ class Controller(season.interfaces.form.controller.admin):
         self.js('js/editor.js')
         self.css('css/editor.css')
         app_id = framework.request.segment.get(0, True)
-        info = self.model.form.get(id=app_id, version="master")
+        version = framework.request.query("version", "master")
+        info = self.model.form.get(id=app_id, version=version)
 
         category = []
         try:
@@ -119,7 +119,7 @@ class Controller(season.interfaces.form.controller.admin):
             info["namespace"] = newid
             info["status"] = "ready"
             info["version"] = "master"
-            info["publish"] = ""
+            info["publish"] = "draft"
             info["api"] = TEXT_API
             info["html"] = "<div></div>"
             info["html_view"] = "<div></div>"
@@ -127,6 +127,7 @@ class Controller(season.interfaces.form.controller.admin):
             info["css"] = ""
             info["status"] = "use"
             info["category"] = cate
+            info["theme"] = "default"
 
             info["created"] = datetime.datetime.now()
             self.model.form.insert(info)
@@ -134,5 +135,5 @@ class Controller(season.interfaces.form.controller.admin):
         
         templates = self.model.template.rows()
 
-        self.exportjs(app_id=app_id, category=category)
+        self.exportjs(app_id=app_id, category=category, version=info["version"])
         framework.response.render('editor.pug', category=category, templates=templates)

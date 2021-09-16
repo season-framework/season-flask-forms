@@ -6,7 +6,7 @@ var content_controller = function ($scope, $timeout, $sce) {
 
     var API_URL = "/form/admin/form";
     var API = {
-        INFO: API_URL + '/api/info/' + app_id,
+        INFO: API_URL + '/api/info/' + app_id + "/" + version,
         DELETE: API_URL + '/api/delete',
         FLUSH: API_URL + '/api/flush',
         UPDATE: API_URL + '/api/update/' + app_id,
@@ -51,7 +51,6 @@ var content_controller = function ($scope, $timeout, $sce) {
 
     $.get(API.INFO, function (res) {
         $scope.info = res.data;
-        console.log(res.data);
         $timeout();
     });
 
@@ -89,9 +88,10 @@ var content_controller = function ($scope, $timeout, $sce) {
             $scope.event.iframe();
             if (cb) return cb(res);
             if (res.code == 200) {
-                return toastr.success('배포되었습니다');
+                location.href = "?version=master";
+                return
             }
-            toastr.error('오류가 발생하였습니다.');
+            toastr.error('Error');
         });
     }
 
@@ -105,12 +105,16 @@ var content_controller = function ($scope, $timeout, $sce) {
         var data = angular.copy($scope.info);
 
         $.post(API.UPDATE, data, function (res) {
+            if ($scope.info.version != "master") {
+                location.href = "?version=master"
+                return;
+            }
             $scope.event.iframe();
             if (cb) return cb(res);
             if (res.code == 200) {
-                return toastr.success('저장되었습니다');
+                return toastr.success('Saved');
             }
-            toastr.error('오류가 발생하였습니다.');
+            toastr.error('Error');
         });
     }
 

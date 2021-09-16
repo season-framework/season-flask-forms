@@ -74,11 +74,14 @@ class view:
 
         for menu in menus:
             pt = None
-            if 'pattern' in menu: pt = menu['pattern']
-            elif 'url' in menu: pt = menu['url']
-
-            if pt is not None:
-                if framework.request.match(pt): menu['class'] = 'bg-dark text-white'
+            if 'pattern' in menu: 
+                pt = menu['pattern']
+                if pt is not None:
+                    if framework.request.match(pt): menu['class'] = 'bg-dark text-white'
+                    else: menu['class'] = ''
+            elif 'url' in menu: 
+                pt = menu['url']
+                if framework.request.uri() == pt: menu['class'] = 'bg-dark text-white'
                 else: menu['class'] = ''
 
         framework.response.data.set(submenus=menus)

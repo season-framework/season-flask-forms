@@ -8,7 +8,8 @@ class Controller(season.interfaces.form.controller.admin_api):
 
     def info(self, framework):
         app_id = framework.request.segment.get(0, True)
-        info = self.model.form.get(id=app_id, version="master")
+        version = framework.request.segment.get(1, "master")
+        info = self.model.form.get(id=app_id, version=version)
         info["history"] = self.model.form.rows(id=app_id, orderby="`version` DESC")
         if info is None:
             self.status(404)
@@ -26,7 +27,7 @@ class Controller(season.interfaces.form.controller.admin_api):
                 data['or']['category'] = data['text']
             del data['text']
         data['like'] = 'title,id,category'
-        data['orderby'] = '`created` DESC'
+        data['orderby'] = '`category` ASC, `title` ASC'
         rows = self.model.form.search(**data)
         self.status(200, rows)
 
@@ -34,6 +35,7 @@ class Controller(season.interfaces.form.controller.admin_api):
         info = framework.request.query()
         if 'id' not in info or info['id'] == 'new':
             self.status(400, "Bad Request")
+        info["version"] = "master"
         stat, _ = self.model.form.upsert(info)
         if stat: self.status(200, info['id'])
         self.status(500, info['id'])

@@ -3,28 +3,28 @@ mixin content()
         .page-header
             .row.align-items-center
                 .col-auto
-                    .page-pretitle 전자결재
-                    h2.page-title 전자결재 관리
+                    .page-pretitle SEASON eForm Platform
+                    h2.page-title eForm Management
 
                 .col-auto.ml-auto.d-print-none
                     .d-flex
-                        input.form-control(type="text" placeholder="검색" ng-model="search.text" ng-enter="event.search()")
-                        a.btn.btn-light.ml-2.d-none.d-sm-inline-block(href='#' style="width: 200px;" ng-click="event.search()")
+                        input.form-control(type="text" placeholder="검색" ng-model="search.text" ng-enter="event.search()" style="max-width: 240px;")
+                        a.btn.btn-light.ml-2.d-none.d-sm-inline-block(href='#' style="width: 140px;" ng-click="event.search()")
                             i.mr-2.fas.fa-search
-                            | 검색
-                        a.btn.btn-light.pr-4.pl-4.ml-2(href='/form/admin/form/editor/new?category={$ category $}' style="width: 200px;") 
+                            | Search
+                        a.btn.btn-light.pr-4.pl-4.ml-2(href='/form/admin/form/editor/new?category={$ category $}' style="width: 140px;") 
                             i.mr-2.fas.fa-plus
-                            | 생성하기
+                            | Create
 
         .overflow-x
             table.table.board-table.table-hover
                 thead 
                     tr
                         th.text-center.width-1 ID
-                        th.text-center.width-1 분류
-                        th.text-center 제목
-                        th.text-center.width-1 배포상태
-                        th.text-center.width-2 등록일
+                        th.text-center.width-1 Category
+                        th.text-center Title
+                        th.text-center.width-1 Status
+                        th.text-center.width-2 Created
 
                 tbody
                     tr(ng-repeat="item in list")
@@ -34,7 +34,7 @@ mixin content()
                             a(ng-href="/form/admin/form/editor/{$ng('item.id')$}")= ng('item.category')
                         td
                             a(ng-href="/form/admin/form/editor/{$ng('item.id')$}")= ng('item.title')
-                        td.text-center.width-2 {{item.publish == 'publish' ? '배포중' : '개발중'}}
+                        td.text-center.width-2 {{item.publish == 'publish' ? 'Publish' : 'Draft'}}
                         td.text-center.width-2 {{item.created.substring(0,10)}}
             
             .pagenation.text-center(ng-if="facet.pages.length > 0")

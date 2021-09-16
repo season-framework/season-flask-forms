@@ -159,7 +159,22 @@ mixin content()
                                 .layout-column
                             .layout-row
                                 .layout-column
+
+                .hr.bg-white.minify
                 
+                h3.text-white.minify History 
+
+                .card.card-sm.mb-3.minify
+                    .overflow(style="max-height: 192px; overflow: auto;")
+                        table.table.board-table.table-hover.mb-0
+                            tbody
+                                tr(ng-if="info.history.length == 0")
+                                    td.text-center.p-6(colspan=5) No History
+                                tr(ng-repeat="item in info.history" class="{{item.version == info.version ? 'bg-dark-lt' : ''}}")
+                                    td.pr-4.pl-4
+                                        a(ng-href="?version={{item.version}}") {{item.version}}
+                                    td.text-center.width-2 {{item.updated.substring(0,10)}}
+
         .panel-context
             .p-0.pt-2.bg-dark
                 table.w-100.code-tabs.code-tabs-top
@@ -213,11 +228,11 @@ mixin content()
         .modal-dialog.modal-sm(role='document')
             .modal-content
                 .modal-body
-                    .modal-title 삭제
-                    div 삭제하면 복원할 수 없습니다. 정말 삭제하시겠습니까?
+                    .modal-title Delete
+                    div You can't do that if you delete it. Wasn't it deleted?
                 .modal-footer
-                    button.btn.btn-link.link-secondary.mr-auto(type='button' data-dismiss='modal') 취소
-                    button.btn.btn-danger(type='button' ng-click="event.delete()") 삭제
+                    button.btn.btn-link.link-secondary.mr-auto(type='button' data-dismiss='modal') Cancel
+                    button.btn.btn-danger(type='button' ng-click="event.delete()") Delete
 
 include form/theme/layout-empty
 +layout
