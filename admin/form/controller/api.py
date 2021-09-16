@@ -10,7 +10,7 @@ class Controller(season.interfaces.form.controller.admin_api):
         app_id = framework.request.segment.get(0, True)
         version = framework.request.segment.get(1, "master")
         info = self.model.form.get(id=app_id, version=version)
-        info["history"] = self.model.form.rows(id=app_id, orderby="`version` DESC")
+        info["history"] = self.model.form.rows(id=app_id, status='use', orderby="`version` DESC")
         if info is None:
             self.status(404)
         self.status(200, info)

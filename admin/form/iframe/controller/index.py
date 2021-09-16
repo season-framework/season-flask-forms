@@ -19,9 +19,9 @@ class Controller(season.interfaces.form.controller.admin):
         if len(form) == 0: 
             framework.response.abort(404)
         
-        doc_id = f"dev-{form_id}"
+        doc_id = framework.request.segment.get(1, f"dev-{form_id}")
         doc = self.model.docs.get(id=doc_id)
-        if doc is None:
+        if doc is None and doc_id.split("-")[0] == "dev":
             self.model.docs.create(form_id, form_version="master")
 
         doc = self.model.docs.data(doc_id)

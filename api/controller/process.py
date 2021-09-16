@@ -100,7 +100,7 @@ class Controller(season.interfaces.form.controller.api):
 
         data = self.model.process.get(doc_id=doc['id'], status='ready', user_id=self.config.uid(framework))
         if data is None:
-            self.status(401, "잘못된 접근입니다.")
+            self.status(401, "Unauthorized")
 
         data["status"] = "finish"
         data["response"] = framework.request.query("response", "")
@@ -147,7 +147,7 @@ class Controller(season.interfaces.form.controller.api):
 
         data = self.model.process.get(doc_id=doc['id'], status='ready', user_id=self.config.uid(framework))
         if data is None:
-            self.status(401, "잘못된 접근입니다.")
+            self.status(401, "Unauthorized")
 
         data["status"] = "reject"
         data["response"] = framework.request.query("response", "")

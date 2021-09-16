@@ -71,7 +71,6 @@ class Controller(season.interfaces.form.controller.admin):
         return response.redirect('list')
 
     def list(self, framework):
-        if 'topmenus' in self.config: self.topnav(self.config.topmenus)
         cate = framework.request.segment.get(0, None)
         self.js('js/list.js')
         search = framework.request.query()
@@ -108,7 +107,7 @@ class Controller(season.interfaces.form.controller.admin):
 
         if info is None:
             info = dict()
-            info["title"] = "새로운 문서"
+            info["title"] = "New Forms"
             info["user_id"] = self.config.uid(framework)
             newid = framework.lib.util.randomstring(32)
             res = self.model.form.get(id=newid)
@@ -121,8 +120,8 @@ class Controller(season.interfaces.form.controller.admin):
             info["version"] = "master"
             info["publish"] = "draft"
             info["api"] = TEXT_API
-            info["html"] = "<div></div>"
-            info["html_view"] = "<div></div>"
+            info["html"] = ".container"
+            info["html_view"] = ".container"
             info["js"] = TEXT_JS
             info["css"] = ""
             info["status"] = "use"

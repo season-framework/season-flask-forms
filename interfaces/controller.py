@@ -23,6 +23,7 @@ class view:
         self.model.template = framework.model("template", module="form")
 
         self.config.acl(framework)
+        if 'topmenus' in self.config: self.topnav(self.config.topmenus)
         
     def nav(self, menus):
         framework = self.__framework__
@@ -141,6 +142,7 @@ class admin(view):
         menus = []
         menus.append({ 'title': "Forms", 'url': f'/form/admin/form' , 'pattern': r'^/form/admin/form' })
         menus.append({ 'title': "Templates", 'url': f'/form/admin/template' , 'pattern': r'^/form/admin/template' })
+        menus.append({ 'title': "Monitoring", 'url': f'/form/admin/monitoring' , 'pattern': r'^/form/admin/monitoring' })
         self.nav(menus)
 
 class admin_api(admin):

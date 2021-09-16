@@ -12,7 +12,6 @@ class Controller(season.interfaces.form.controller.admin):
         return response.redirect('list')
 
     def list(self, framework):
-        if 'topmenus' in self.config: self.topnav(self.config.topmenus)
         self.js('js/list.js')
         search = framework.request.query()
         self.exportjs(search=search)
