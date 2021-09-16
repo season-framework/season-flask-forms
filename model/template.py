@@ -43,7 +43,7 @@ class Model(season.core.interfaces.model.MySQL):
             if len(template) == 0:
                 return ""
             template = template[0]
-        
+
         template_pug = template[status]
         template_js = template["js"]
         template_css = template["css"]
@@ -57,11 +57,13 @@ class Model(season.core.interfaces.model.MySQL):
 
         {template_pug}
         
-        <script>{template_js}</script>
+        <script>
+            {template_js}
+        </script>
 
         <script>
             function __init_{form_id}() {o}
-                {js}; 
+                {js};
                 try {o} 
                     app.controller('form-{form_id}', form_controller); 
                 {e}  catch (e) {o} 

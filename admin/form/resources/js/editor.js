@@ -3,7 +3,7 @@ var content_controller = function ($scope, $timeout, $sce) {
     $scope.trustAsHtml = $sce.trustAsHtml;
     $scope.math = Math;
     $scope.category = category;
-    
+
     var API_URL = "/form/admin/form";
     var API = {
         INFO: API_URL + '/api/info/' + app_id,
@@ -51,6 +51,7 @@ var content_controller = function ($scope, $timeout, $sce) {
 
     $.get(API.INFO, function (res) {
         $scope.info = res.data;
+        console.log(res.data);
         $timeout();
     });
 

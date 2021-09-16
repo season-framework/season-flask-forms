@@ -14,8 +14,8 @@ mixin codearea(tab)
 
 mixin codeselect(tab)
     - if tab != 'tab5'
-        button.btn.btn-square.btn-sm.mr-1(ng-click="options.tab.{$tab$}_val = 'html'" ng-class="options.tab.{$tab$}_val == 'html' ? 'btn-white' : 'btn-dark'") HTML(작성)
-        button.btn.btn-square.btn-sm.mr-1(ng-click="options.tab.{$tab$}_val = 'html_view'" ng-class="options.tab.{$tab$}_val == 'html_view' ? 'btn-white' : 'btn-dark'") HTML(조회)
+        button.btn.btn-square.btn-sm.mr-1(ng-click="options.tab.{$tab$}_val = 'html'" ng-class="options.tab.{$tab$}_val == 'html' ? 'btn-white' : 'btn-dark'") PUG(Editor)
+        button.btn.btn-square.btn-sm.mr-1(ng-click="options.tab.{$tab$}_val = 'html_view'" ng-class="options.tab.{$tab$}_val == 'html_view' ? 'btn-white' : 'btn-dark'") PUG(Viewer)
         button.btn.btn-square.btn-sm.mr-1(ng-click="options.tab.{$tab$}_val = 'js'" ng-class="options.tab.{$tab$}_val == 'js' ? 'btn-white' : 'btn-dark'") JS
         button.btn.btn-square.btn-sm.mr-1(ng-click="options.tab.{$tab$}_val = 'css'" ng-class="options.tab.{$tab$}_val == 'css' ? 'btn-white' : 'btn-dark'") CSS
         button.btn.btn-square.btn-sm.mr-1(ng-click="options.tab.{$tab$}_val = 'api'" ng-class="options.tab.{$tab$}_val == 'api' ? 'btn-white' : 'btn-dark'") API
@@ -39,19 +39,19 @@ mixin content()
                     .navbar-nav.flex-row.order-md-last.mr-2(style="align-items: center;")
                         li.nav-item.p-0.pr-2
                             a.nav-link.btn.btn-sm.text-dark.btn-white.btn-pill(ng-click="event.flush()")
-                                span.nav-link-title(style="font-size: 14px;") 데이터초기화
+                                span.nav-link-title(style="font-size: 14px;") Initialize
 
                         li.nav-item.p-0.pr-2
                             a.nav-link.btn.btn-sm.text-dark.btn-white.btn-pill(ng-click="event.modal.delete()")
-                                span.nav-link-title(style="font-size: 14px;") 삭제하기
+                                span.nav-link-title(style="font-size: 14px;") Delete
 
                         li.nav-item.p-0.pr-2
                             a.nav-link.btn.btn-sm.text-dark.btn-white.btn-pill(ng-click="event.publish()")
-                                span.nav-link-title(style="font-size: 14px;") 배포하기
+                                span.nav-link-title(style="font-size: 14px;") Publish
 
                         li.nav-item.p-0.pr-2
                             a.nav-link.btn.btn-sm.text-dark.btn-white.btn-pill(ng-click="event.save()")
-                                span.nav-link-title(style="font-size: 14px;") 저장하기
+                                span.nav-link-title(style="font-size: 14px;") Save
 
                         li.nav-item.p-0
                             a.nav-link.btn.btn-sm.text-dark.btn-white.btn-pill(href='/form/admin/form/list/{{info.category}}')
@@ -63,25 +63,25 @@ mixin content()
             .menu-layout.p-3
                 h3.text-white.mb-3 
                     i.fas.fa-bars.mr-2(ng-click="event.toggle.sidemenu()")
-                    span.minify 전자결재양식
+                    span.minify eForms Editor
 
                 .card.card-sm.mb-3.minify
                     .card-body
-                        label.form-label 문서 제목
+                        label.form-label Title
                         input.form-control(type='text' placeholder='App 제목' ng-model="info.title")
 
                 .card.card-sm.mb-3.minify
                     .card-body
-                        label.form-label 문서 분류
+                        label.form-label Category
                         select.form-select(ng-model="info.category")
                             option(value="{{c}}" ng-repeat="c in category") {{c}}
 
                 .card.card-sm.mb-3.minify
                     .card-body
-                        label.form-label 상태
+                        label.form-label Status
                         select.form-select(ng-model="info.publish")
-                            option(value="publish") 공개
-                            option(value="draft") 수정중
+                            option(value="publish") Public
+                            option(value="draft") Draft
                 
                 .card.card-sm.mb-3.minify
                     .card-body
@@ -92,12 +92,12 @@ mixin content()
 
                 .card.card-sm.mb-3.minify
                     .card-body
-                        label.form-label 설명
+                        label.form-label Description
                         textarea.form-control(ng-model="info.content" rows=4)
 
                 .hr.bg-white.minify
                 
-                h3.text-white.minify 레이아웃
+                h3.text-white.minify Layout
 
                 .text-center.mb-4
                     .layout-selector.p-2(ng-class="options.layout == 1 ? 'active' : ''" ng-click="options.layout = 1")

@@ -135,10 +135,14 @@ class Model(season.core.interfaces.model.MySQL):
         
         # new doc id creator
         def id_builder():
-            newid = datetime.datetime.now().strftime("%Y") + "-" + form['category'] + "-" + framework.lib.util.randomstring(12)
+            def _genid(framework, form):
+                return datetime.datetime.now().strftime("%Y") + "-" + form['category'] + "-" + framework.lib.util.randomstring(12)
+            if config.id_builder is not None: genid = config.id_builder 
+            else: genid = _genid
+            newid = genid(framework, form)
             res = self.get(id=newid)
             while res is not None:
-                newid = datetime.datetime.now().strftime("%Y") + "-" + form['category'] + "-" + framework.lib.util.randomstring(12)
+                newid = genid(framework, form)
                 res = self.get(id=newid)
             return newid
 
