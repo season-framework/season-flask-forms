@@ -3,6 +3,8 @@ var content_controller = function ($sce, $scope, $timeout) {
         SEARCH: '/form/admin/monitoring/api/document/search'
     };
 
+    $scope.loading = true;
+
     $scope.math = Math;
     $scope.list = [];
     $scope.facet = {};
@@ -12,11 +14,18 @@ var content_controller = function ($sce, $scope, $timeout) {
     if (!$scope.search.text) $scope.search.text = "";
 
     $scope.event = {};
-
     $scope.event.docviewer = function (item) {
-        var url = '/form/admin/form/iframe/' + item.form.id + '/' + item.id;
-        $('#modal-document iframe').attr('src', url);
-        $('#modal-document').modal('show');
+        $scope.loading = true;
+        $timeout(function () {
+            var url = '/form/admin/form/iframe/' + item.form.id + '/' + item.id;
+            $('#modal-document iframe').attr('src', url);
+            $('#modal-document iframe').on('load', function () {
+                $scope.loading = false;
+                $timeout();
+                $('#modal-document').modal('show');
+            });
+        })
+
     }
 
     $scope.event.delete = function (item) {
@@ -50,6 +59,7 @@ var content_controller = function ($sce, $scope, $timeout) {
                 $scope.facet.total = res.data.total;
                 $scope.list = res.data.list;
                 $scope.event.pagination();
+                $scope.loading = false;
             }
             $timeout();
         })
