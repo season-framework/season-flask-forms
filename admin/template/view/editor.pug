@@ -87,7 +87,12 @@ mixin content()
                             .btn.mr-1(class="{{options.view == 'process' ? 'btn-dark' : 'btn-outline-dark'}}" ng-click="event.view('process')") Process
                             .btn(class="{{options.view == 'view' ? 'btn-dark' : 'btn-outline-dark'}}" ng-click="event.view('view')") Viewer
 
-                .hr.bg-white.minify
+                .text-center.maxify
+                    .btn.btn-block.btn-square(class="{{options.view == 'draft' ? 'btn-white' : 'btn-dark'}}" ng-click="event.view('draft')") Draft
+                    .btn.btn-block.btn-square(class="{{options.view == 'process' ? 'btn-white' : 'btn-dark'}}" ng-click="event.view('process')") Process
+                    .btn.btn-block.btn-square(class="{{options.view == 'view' ? 'btn-white' : 'btn-dark'}}" ng-click="event.view('view')") Viewer
+
+                .hr.bg-white
                 
                 h3.text-white.minify Layout
 
@@ -188,10 +193,10 @@ mixin content()
                                 +codearea('tab4')
 
                     tr.gutter.g-t(ng-if="[5,6,7,8].includes(options.layout)" target="tab-5" ng-drag="event.drag")
-                        td(colspan="{$ng('(options.layout - 4) + (options.layout - 5)')$}")
+                        td(colspan="{{(options.layout - 4) + (options.layout - 5)}}")
 
                     tr.code-tr.code-bottom(ng-if="[5,6,7,8].includes(options.layout)")
-                        td.tab-5(colspan="{$ng('(options.layout - 4) + (options.layout - 5)')$}")
+                        td.tab-5(colspan="{{(options.layout - 4) + (options.layout - 5)}}")
                             .code-input(style='height: 100%;')
                                 +codearea('tab5')
 

@@ -36,7 +36,7 @@ mixin content()
                 button.btn.btn-square.btn-sm.btn-light.pt-1.pb-1(ng-click="event.page(search.page*1-1)")
                     i.fas.fa-angle-left
 
-                button.btn.btn-square.btn-sm(ng-repeat="page in facet.pages" ng-class="page == search.page ? 'btn-dark' : ''" ng-click="event.page(page)")= ng('page')
+                button.btn.btn-square.btn-sm(ng-repeat="page in facet.pages" ng-class="page == search.page ? 'btn-dark' : ''" ng-click="event.page(page)") {{page}}
 
                 button.btn.btn-square.btn-sm.btn-light.pt-1.pb-1(ng-click="event.page(search.page*1+1)")
                     i.fas.fa-angle-right

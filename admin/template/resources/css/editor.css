@@ -38,6 +38,10 @@
     .fixed-top#top-nav .container-xl {
         max-width: none;
     }
+    
+    .sidemenu-on .panel-menu .maxify {
+        display: none;
+    }
 
     /* side menu off */
     .sidemenu-off .panel-menu {

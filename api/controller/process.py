@@ -1,5 +1,4 @@
 import season
-import json
 
 class Controller(season.interfaces.form.controller.api):
 
@@ -8,16 +7,13 @@ class Controller(season.interfaces.form.controller.api):
         self.framework = framework
 
         # check access level
-        doc_id = framework.request.segment.get(0, True)
-        doc = self.model.docs.data(doc_id)
+        self.doc_id = doc_id = framework.request.segment.get(0, True)
+        self.doc = doc = self.model.docs.data(doc_id)
         if doc is None: self.status(404)
 
-        formapi = self.model.form.api(doc["form_id"], doc["form_version"])
-        templateapi = self.model.template.api(doc["form_id"])
-
-        self.doc = doc
-        self.formapi = formapi
-        self.templateapi = templateapi
+        self.flow = framework.model("flow", module="form").init(doc_id, self.status)        
+        form = self.model.form.get(id=doc["form_id"])
+        self.templateapi = self.model.template.api(form['theme'])
 
     def __default__(self, framework):
         framework.response.abort(404)
@@ -29,165 +25,59 @@ class Controller(season.interfaces.form.controller.api):
         if key in obj:
             del obj[key]
 
+    def __templateapi(self, name):
+        framework = self.framework
+        if name in self.templateapi:
+            framework.response.status = self.status
+            self.templateapi[name](framework, self.flow)
+
     # save draft
     def draft(self, framework):
+        self.__templateapi("draft")
         data = dict()
-        data["id"] = self.doc["id"]
         data["title"] = framework.request.query("title", "")
-        try: data["approval_line"] = json.dumps(framework.request.query("title", []), default=season.json_default)
-        except: data["approval_line"] = "[]"
-        self.model.docs.upsert(data)
-        
-        data = dict()
-        data["doc_id"] = self.doc["id"]
-        data["user_id"] = self.config.uid(framework)
-        data["seq"] = 0
-        data["subseq"] = 0
-        data["status"] = "draft"
+        data["approval_line"] = framework.request.query("approval_line", "[]")
         data["data"] = framework.request.query("data", "{}")
-        data["response"] = ""
-        if type(data["data"]) != str: data["data"] = json.dumps(data["data"], season.json_default)
-        self.model.process.upsert(data)
-
+        self.flow.draft(**data)
         self.status(200, framework.dic.form.API.SAVED)
 
     # Submit
     def submit(self, framework):
-        formapi = self.formapi
-        doc = self.doc
-
+        self.__templateapi("submit")
         data = dict()
         data["title"] = framework.request.query("title", "")
-        try: data["approval_line"] = json.dumps(framework.request.query("title", []), default=season.json_default)
-        except: data["approval_line"] = "[]"
-        self.model.docs.update(data, id=doc["id"])
-
-        # onsubmit event
-        approval_line = self.model.docs.approval_line(self.doc["id"])
-        doc["approval_line"] = approval_line
-        if 'onsubmit' in formapi:
-            formapi["onsubmit"](framework, doc, self.status)
+        data["approval_line"] = framework.request.query("approval_line", [])
+        self.flow.draft(**data)
         
-        # status change
-        draft = doc["draft"]
-        self.delkey(draft, "timestamp")
-        try: draft['data'] = json.dumps(draft['data'], default=season.json_default)
-        except Exception as e: draft['data'] = "{}"
-        
-        for seq in range(len(approval_line)):
-            if seq == 0: continue
-            draft['status'] = "ready"
-            if seq > 1: draft['status'] = "pending"
-            for subseq in range(len(approval_line[seq])):
-                uid = approval_line[seq][subseq]
-                draft['seq'] = seq * 10
-                draft['subseq'] = subseq
-                draft['user_id'] = uid
-                self.model.process.upsert(draft)
-        
-        data = dict()
-        if len(approval_line) == 1:
-            data["status"] = "finish"
-            if 'onfinish' in formapi:
-                formapi["onfinish"](framework, doc, self.status)
-        else:
-            data["status"] = "process"
-
-        self.model.docs.update(data, id=self.doc["id"])
+        # submit
+        self.flow.open()
         self.status(200, framework.dic.form.API.SUBMIT)
 
     # Approve
     def approve(self, framework):
-        formapi = self.formapi
-        doc = self.doc
-
-        data = self.model.process.get(doc_id=doc['id'], status='ready', user_id=self.config.uid(framework))
-        if data is None:
-            self.status(401, "Unauthorized")
-
-        data["status"] = "finish"
-        data["response"] = framework.request.query("response", "")
-        del data['timestamp']
-        self.model.process.upsert(data)
-
-        readycount = len(self.model.process.rows(doc_id=doc['id'], status='ready'))
-        if readycount > 0:
-            if 'onapprove' in formapi:
-                formapi["onapprove"](framework, doc, self.status)
-            self.status(200, framework.dic.form.API.APPROVE)
-
-        pendings = self.model.process.rows(doc_id=doc['id'], status='pending', orderby="`seq` ASC, `subseq` ASC")
-        #  if pending not exists, end document
-        if len(pendings) == 0:
-            data = dict()
-            data["status"] = "finish"
-            self.model.docs.update(data, id=doc["id"])
-            if 'onfinish' in formapi:
-                formapi["onfinish"](framework, doc, self.status)
-            self.status(200, framework.dic.form.API.APPROVE)
-
-        preseq = None
-        for pending in pendings:
-            seq = int(pending['seq'])
-            if preseq is None: preseq = seq
-            if preseq != seq: break
-            
-            data = pending
-            data["status"] = "ready"
-            del data['timestamp']
-            self.model.process.upsert(data)
-            preseq = seq
-
-        if 'onapprove' in formapi:
-            formapi["onapprove"](framework, doc, self.status)
-
+        self.__templateapi("approve")
+        response = framework.request.query("response", "")
+        self.flow.response(response)
+        self.flow.approve()
+        self.flow.next()
         self.status(200, framework.dic.form.API.APPROVE)
 
     # Reject
     def reject(self, framework):
-        formapi = self.formapi
-        doc = self.doc
-
-        data = self.model.process.get(doc_id=doc['id'], status='ready', user_id=self.config.uid(framework))
-        if data is None:
-            self.status(401, "Unauthorized")
-
-        data["status"] = "reject"
-        data["response"] = framework.request.query("response", "")
-        del data['timestamp']
-        self.model.process.upsert(data)
-
-        data = dict()
-        data["status"] = "reject"
-        self.model.docs.update(data, id=doc["id"])
-
-        data = dict()
-        data["status"] = "cancel"
-        self.model.process.update(data, doc_id=doc["id"], status="pending")
-        self.model.process.update(data, doc_id=doc["id"], status="ready")
-
-        if 'onreject' in formapi:
-            formapi["onreject"](framework, doc, self.status)
-
+        self.__templateapi("reject")
+        response = framework.request.query("response", "")
+        self.flow.response(response)
+        self.flow.reject()
+        self.flow.cancel()
+        self.flow.close("reject")
         self.status(200, True)
 
     # Cancel
     def cancel(self, framework):
-        formapi = self.formapi
+        self.__templateapi("cancel")
         doc = self.doc
-
         if doc['user_id'] != self.config.uid(framework):
             self.status(401, True)
-
-        data = dict()
-        data["status"] = "cancel"
-        self.model.docs.update(data, id=doc["id"])
-
-        data = dict()
-        data["status"] = "cancel"
-        self.model.process.update(data, doc_id=doc["id"], status="pending")
-        self.model.process.update(data, doc_id=doc["id"], status="ready")
-
-        if 'oncancel' in formapi:
-            formapi["oncancel"](framework, doc, self.status)
+        self.flow.cancel()
+        self.flow.close("cancel")
         self.status(200, True)
