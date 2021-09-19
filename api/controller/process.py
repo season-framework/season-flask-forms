@@ -13,8 +13,11 @@ class Controller(season.interfaces.form.controller.api):
         if doc is None: self.status(404)
 
         formapi = self.model.form.api(doc["form_id"], doc["form_version"])
+        templateapi = self.model.template.api(doc["form_id"])
+
         self.doc = doc
         self.formapi = formapi
+        self.templateapi = templateapi
 
     def __default__(self, framework):
         framework.response.abort(404)

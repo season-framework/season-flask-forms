@@ -13,6 +13,6 @@ class Model(season.core.interfaces.model.MySQL):
     def api(self, id, version="master"):
         info = self.get(id=id, version=version)
         process_api = info['api']
-        fn = {'__file__': 'season.form.Spawner', '__name__': 'season.form.Spawner'}
+        fn = {'__file__': 'season.form.Spawner', '__name__': 'season.form.Spawner', 'framework': self.framework}
         exec(compile(process_api, 'season.form.Spawner', 'exec'), fn)
         return fn

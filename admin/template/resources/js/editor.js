@@ -43,6 +43,14 @@ var content_controller = function ($scope, $timeout, $sce) {
             if (['view', 'process', 'draft'].includes($scope.options.tab[key])) {
                 $scope.options.tab[key] = angular.copy($scope.options.view);
             }
+
+            if (['view_js', 'process_js', 'draft_js'].includes($scope.options.tab[key])) {
+                $scope.options.tab[key] = angular.copy($scope.options.view + "_js");
+            }
+
+            if (['view_css', 'process_css', 'draft_css'].includes($scope.options.tab[key])) {
+                $scope.options.tab[key] = angular.copy($scope.options.view + "_css");
+            }
         }
         $scope.event.iframe();
         $timeout();
@@ -84,11 +92,14 @@ var content_controller = function ($scope, $timeout, $sce) {
     };
 
     $scope.event.save = function (cb) {
-        try { $scope.info.draft = $scope.info.draft.replace(/\t/gim, '    '); } catch (e) { }
-        try { $scope.info.process = $scope.info.process.replace(/\t/gim, '    '); } catch (e) { }
-        try { $scope.info.view = $scope.info.view.replace(/\t/gim, '    '); } catch (e) { }
-        try { $scope.info.js = $scope.info.js.replace(/\t/gim, '    '); } catch (e) { }
-        try { $scope.info.css = $scope.info.css.replace(/\t/gim, '    '); } catch (e) { }
+        var tabsizectrl = function(val) {
+            try { $scope.info[val] = $scope.info[val].replace(/\t/gim, '    '); } catch (e) { }    
+            try { $scope.info[val + "_js"] = $scope.info[val+ "_js"].replace(/\t/gim, '    '); } catch (e) { }    
+            try { $scope.info[val+ "_css"] = $scope.info[val+ "_css"].replace(/\t/gim, '    '); } catch (e) { }    
+        }
+        tabsizectrl("draft")
+        tabsizectrl("view")
+        tabsizectrl("process")
 
         var data = angular.copy($scope.info);
 

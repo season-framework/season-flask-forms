@@ -45,8 +45,8 @@ class Model(season.core.interfaces.model.MySQL):
             template = template[0]
 
         template_pug = template[status]
-        template_js = template["js"]
-        template_css = template["css"]
+        template_js = template[status + "_js"]
+        template_css = template[status + "_css"]
         template_pug = self.compile_pug(template_pug)
         template_pug = self.framework.response.template_from_string(template_pug, **kwargs)
         template_css = lesscpy.compile(StringIO(template_css), minify=True)
@@ -78,3 +78,21 @@ class Model(season.core.interfaces.model.MySQL):
         """
         
         return view
+
+    def api(self, id):
+        template = self.get(id=id)
+        if template is None:
+            template = self.get(id="default")            
+        if template is None:
+            template = self.rows(limit=1)
+            if len(template) == 0:
+                return ""
+            template = template[0]
+
+        if template is None:
+            return season.stdClass()
+            
+        process_api = template['api']
+        fn = {'__file__': 'season.form.Spawner', '__name__': 'season.form.Spawner', 'framework': self.framework}
+        exec(compile(process_api, 'season.form.Spawner', 'exec'), fn)
+        return fn

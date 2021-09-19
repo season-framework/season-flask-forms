@@ -25,7 +25,7 @@ class Controller(season.interfaces.form.controller.admin):
 
         if info is None:
             info = dict()
-            info["displayname"] = "새로운 템플릿"
+            info["displayname"] = "New Template"
             newid = framework.lib.util.randomstring(16)
             res = self.model.template.get(id=newid)
             while res is not None:
@@ -36,7 +36,8 @@ class Controller(season.interfaces.form.controller.admin):
             info["process"] = ""
             info["view"] = ""
             info["js"] = ""
-            self.model.form.insert(info)
+            info["css"] = ""
+            self.model.template.insert(info)
             framework.response.redirect("editor/" + newid)
         
         self.exportjs(id=id)
