@@ -16,6 +16,9 @@ class Controller(season.interfaces.form.controller.api):
         self.templateapi = self.model.template.api(form['theme'])
 
     def __default__(self, framework):
+        fn = framework.request.segment.get(0, None)
+        if fn is not None:
+            self.__templateapi(fn)
         framework.response.abort(404)
 
     def __error__(self, framework, e):
