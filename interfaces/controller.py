@@ -24,6 +24,8 @@ class view:
 
         self.config.acl(framework)
         if 'topmenus' in self.config: self.topnav(self.config.topmenus)
+
+        framework.response.status = self.status
         
     def nav(self, menus):
         framework = self.__framework__
