@@ -12,9 +12,9 @@ class Model:
         self.model.process = framework.model("process", module="form")
         self.model.template = framework.model("template", module="form")
 
-    def init(self, doc_id, resp):
+    def init(self, doc_id, resp, user_id=None):
         self = Model(self.framework)
-        doc = self.doc = self.model.docs.data(doc_id)
+        doc = self.doc = self.model.docs.data(doc_id, user_id=user_id)
         if doc is None: 
             raise Exception("Document Not Found")
         form = self.form = self.model.form.get(id=doc["form_id"], version=doc["form_version"])
