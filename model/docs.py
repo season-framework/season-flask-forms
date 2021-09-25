@@ -262,6 +262,7 @@ class Model(season.core.interfaces.model.MySQL):
             additional_approval_line = json.loads(doc["approval_line"])
         except:
             additional_approval_line = []
+
         for i in range(len(additional_approval_line)):
             _line = []
             for j in range(len(additional_approval_line[i])):
@@ -271,7 +272,7 @@ class Model(season.core.interfaces.model.MySQL):
                         _line.append(uid)
             if len(_line) > 0:
                 approval_line.append(_line)
-
+        
         # required approval line
         required_approval_line = formapi['approval_line'](framework, doc)
         for i in range(len(required_approval_line)):
@@ -295,7 +296,6 @@ class Model(season.core.interfaces.model.MySQL):
                     approval_line.append(_line)
                 
         doc["approval_line"] = approval_line
-
         doc["build"] = formapi['build'](framework, doc)
 
         # check customized document access level

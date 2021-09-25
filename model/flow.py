@@ -41,8 +41,9 @@ class Model:
                 del data[key]
 
         try: 
-            if type(data["approval_line"]) != str:
-                data["approval_line"] = json.dumps(data["approval_line"], default=season.json_default)
+            if "approval_line" in data:
+                if type(data["approval_line"]) != str:
+                    data["approval_line"] = json.dumps(data["approval_line"], default=season.json_default)
         except: 
             data["approval_line"] = "[]"
 
@@ -144,6 +145,7 @@ class Model:
         doc_id = self.doc_id
         draft = self.model.process.get(doc_id=self.doc_id, status="draft")
         approval_line = self.model.docs.approval_line(doc_id)
+
         for seq in range(len(approval_line)):
             if seq == 0: continue # if draft, pass
             status = "ready"
@@ -151,7 +153,6 @@ class Model:
             for subseq in range(len(approval_line[seq])):
                 uid = approval_line[seq][subseq]
                 self.__create_process(user_id=uid, seq=seq * 10, subseq=subseq, status=status, data=draft["data"], response="")
-        
         self.close()
         return True
 
