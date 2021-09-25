@@ -12,7 +12,7 @@ class Controller(season.interfaces.form.controller.api):
         if doc is None: self.status(404)
 
         self.flow = framework.model("flow", module="form").init(doc_id, self.status)        
-        form = self.model.form.get(id=doc["form_id"])
+        form = self.model.form.get(id=doc["form_id"], version=doc["form_version"])
         self.templateapi = self.model.template.api(form['theme'])
 
     def __default__(self, framework):
@@ -59,6 +59,7 @@ class Controller(season.interfaces.form.controller.api):
     # Approve
     def approve(self, framework):
         self.__templateapi("approve")
+        print("default process")
         response = framework.request.query("response", "")
         self.flow.response(response)
         self.flow.approve()
