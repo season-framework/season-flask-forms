@@ -17,6 +17,8 @@ var season_form = function (form_id, doc_id, version) {
     API.PROCESS.CANCEL = baseurl + "/process/cancel/" + doc_id;
 
     var fn = function (url, data, cb, opts) {
+        data['template_id'] = template_id;
+        
         var ajax = {
             url: url,
             type: 'POST',

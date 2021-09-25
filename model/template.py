@@ -53,11 +53,11 @@ class Model(season.core.interfaces.model.MySQL):
         template_css = str(template_css)
 
         view = f"""<script src='/resources/form/season-form.js'></script>
-        <script>var sform = season_form('{form_id}', '{doc_id}', '{form_version}');</script>
+        <script>var template_id = '{id}'; var sform = season_form('{form_id}', '{doc_id}', '{form_version}');</script>
 
         {template_pug}
         
-        <script>
+        <script>            
             {template_js}
         </script>
 

@@ -11,18 +11,22 @@ class Controller(season.interfaces.form.controller.api):
         self.doc = doc = self.model.docs.data(doc_id)
         if doc is None: self.status(404)
 
-        self.flow = framework.model("flow", module="form").init(doc_id, self.status)        
-        form = self.model.form.get(id=doc["form_id"], version=doc["form_version"])
-        self.templateapi = self.model.template.api(form['theme'])
+        if doc_id == 'dummy':
+            self.flow = None
+            self.templateapi = self.model.template.api(framework.request.query("template_id", "default"))
+        else:    
+            self.flow = framework.model("flow", module="form").init(doc_id, self.status)
+            form = self.model.form.get(id=doc["form_id"], version=doc["form_version"])
+            self.templateapi = self.model.template.api(form['theme'])
 
     def __default__(self, framework):
         fn = framework.request.segment.get(1, None)
         if fn is not None:
             self.__templateapi(fn)
-        framework.response.abort(404)
+        self.status(404, "Not Found")
 
     def __error__(self, framework, e):
-        self.status(500, framework.dic.form.API.ERROR)
+        self.status(500, e)
 
     def delkey(self, obj, key):
         if key in obj:
@@ -31,8 +35,9 @@ class Controller(season.interfaces.form.controller.api):
     def __templateapi(self, name):
         framework = self.framework
         if name in self.templateapi:
-            framework.response.status = self.status
-            self.templateapi[name](framework, self.flow)
+            if self.templateapi[name] is not None:
+                framework.response.status = self.status
+                self.templateapi[name](framework, self.flow)
 
     # save draft
     def draft(self, framework):
