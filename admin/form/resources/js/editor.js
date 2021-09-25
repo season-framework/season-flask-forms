@@ -14,6 +14,9 @@ var content_controller = function ($scope, $timeout, $sce) {
         UPLOAD: API_URL + '/api/upload',
         LIST: API_URL,
         IFRAME: function (app_id) {
+            if ($scope.info.viewuri) {
+                return $scope.info.viewuri;
+            }
             return API_URL + "/iframe/" + app_id + '?mode=' + $scope.preview_mode + '&time=' + new Date().getTime();
         }
     };
@@ -48,11 +51,6 @@ var content_controller = function ($scope, $timeout, $sce) {
         }
         $scope.event.iframe();
     }
-
-    $.get(API.INFO, function (res) {
-        $scope.info = res.data;
-        $timeout();
-    });
 
     $scope.event.flush = function () {
         $.get(API.FLUSH, { id: app_id }, function (res) {
@@ -138,7 +136,11 @@ var content_controller = function ($scope, $timeout, $sce) {
     });
 
     // init page
-    $scope.event.iframe();
+    $.get(API.INFO, function (res) {
+        $scope.info = res.data;
+        $scope.event.iframe();
+        $timeout();
+    });
 
     // shortcut
     shortcutjs(window, {
