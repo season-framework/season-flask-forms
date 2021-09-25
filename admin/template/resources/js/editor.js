@@ -10,6 +10,13 @@ var content_controller = function ($scope, $timeout, $sce) {
         UPDATE: API_URL + '/api/update/' + id,
         LIST: API_URL,
         IFRAME: function (id) {
+            try {
+                if ($scope.info.viewuri) {
+                    return $scope.info.viewuri;
+                }
+            } catch (e) {
+            }
+
             return API_URL + "/iframe/" + id + "/" + $scope.options.view + '?mode=' + $scope.preview_mode + '&time=' + new Date().getTime();
         }
     };
@@ -37,7 +44,7 @@ var content_controller = function ($scope, $timeout, $sce) {
 
     $scope.event = {};
 
-    $scope.event.view = function(status) {
+    $scope.event.view = function (status) {
         $scope.options.view = status;
         for (var key in $scope.options.tab) {
             if (['view', 'process', 'draft'].includes($scope.options.tab[key])) {
@@ -65,11 +72,6 @@ var content_controller = function ($scope, $timeout, $sce) {
         $scope.event.iframe();
     }
 
-    $.get(API.INFO, function (res) {
-        $scope.info = res.data;
-        $timeout();
-    });
-
     $scope.event.delete = function () {
         $.get(API.DELETE, { id: id }, function (res) {
             location.href = API.LIST;
@@ -92,10 +94,10 @@ var content_controller = function ($scope, $timeout, $sce) {
     };
 
     $scope.event.save = function (cb) {
-        var tabsizectrl = function(val) {
-            try { $scope.info[val] = $scope.info[val].replace(/\t/gim, '    '); } catch (e) { }    
-            try { $scope.info[val + "_js"] = $scope.info[val+ "_js"].replace(/\t/gim, '    '); } catch (e) { }    
-            try { $scope.info[val+ "_css"] = $scope.info[val+ "_css"].replace(/\t/gim, '    '); } catch (e) { }    
+        var tabsizectrl = function (val) {
+            try { $scope.info[val] = $scope.info[val].replace(/\t/gim, '    '); } catch (e) { }
+            try { $scope.info[val + "_js"] = $scope.info[val + "_js"].replace(/\t/gim, '    '); } catch (e) { }
+            try { $scope.info[val + "_css"] = $scope.info[val + "_css"].replace(/\t/gim, '    '); } catch (e) { }
         }
         tabsizectrl("draft")
         tabsizectrl("view")
@@ -133,7 +135,12 @@ var content_controller = function ($scope, $timeout, $sce) {
     });
 
     // init page
-    $scope.event.iframe();
+    $.get(API.INFO, function (res) {
+        $scope.info = res.data;
+        $timeout(function () {
+            $scope.event.iframe();
+        });
+    });
 
     // shortcut
     shortcutjs(window, {

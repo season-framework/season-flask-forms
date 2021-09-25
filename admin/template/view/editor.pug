@@ -92,6 +92,11 @@ mixin content()
                     .btn.btn-block.btn-square(class="{{options.view == 'process' ? 'btn-white' : 'btn-dark'}}" ng-click="event.view('process')") Process
                     .btn.btn-block.btn-square(class="{{options.view == 'view' ? 'btn-white' : 'btn-dark'}}" ng-click="event.view('view')") Viewer
 
+                .card.card-sm.mb-3.minify
+                    .card-body
+                        label.form-label View URI
+                        input.form-control(type='text' placeholder='/eform/sample' ng-model="info.viewuri")
+
                 .hr.bg-white
                 
                 h3.text-white.minify Layout
