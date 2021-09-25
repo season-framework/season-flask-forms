@@ -13,6 +13,7 @@ class Model:
         self.model.template = framework.model("template", module="form")
 
     def init(self, doc_id, resp):
+        self = Model(self.framework)
         doc = self.doc = self.model.docs.data(doc_id)
         if doc is None: 
             raise Exception("Document Not Found")
@@ -206,7 +207,9 @@ class Model:
         framework = self.framework
         user_id = self.config.uid(framework)
         doc_id = self.doc_id
+
         process = self.model.process.get(doc_id=doc_id, status='ready', user_id=user_id)
+
         if process is None:
             return False
         self.__formapi('onapprove')
