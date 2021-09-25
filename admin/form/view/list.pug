@@ -9,10 +9,10 @@ mixin content()
                 .col-auto.ml-auto.d-print-none
                     .d-flex
                         input.form-control(type="text" placeholder="Search.." ng-model="search.text" ng-enter="event.search()" style="max-width: 240px;")
-                        a.btn.btn-light.ml-2.d-none.d-sm-inline-block(href='#' style="width: 140px;" ng-click="event.search()")
+                        a.btn.btn-light.ml-2.d-none.d-sm-inline-block(href='#' style="width: 160px;" ng-click="event.search()")
                             i.mr-2.fas.fa-search
                             | Search
-                        a.btn.btn-light.pr-4.pl-4.ml-2(href='/form/admin/form/editor/new?category={$ category $}' style="width: 140px;") 
+                        a.btn.btn-light.pr-4.pl-4.ml-2(href='/form/admin/form/editor/new?category={$ category $}' style="width: 160px;") 
                             i.mr-2.fas.fa-plus
                             | Create
 

@@ -127,7 +127,7 @@ class Controller(season.interfaces.form.controller.admin):
             info["status"] = "use"
             info["category"] = cate
             info["theme"] = "default"
-            info["viewuri"] = "default"
+            info["viewuri"] = ""
 
             info["created"] = datetime.datetime.now()
             self.model.form.insert(info)

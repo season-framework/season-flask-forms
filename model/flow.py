@@ -71,6 +71,27 @@ class Model:
         if "timestamp" in data: del data["timestamp"]
         self.model.process.update(data, doc_id=doc_id, user_id=user_id, seq=seq, subseq=subseq)
 
+    def add_process(self, uids):
+        self.add_process_next(uids)
+
+    def add_process_next(self, uids):
+        if type(uids) == str:
+            uids = [uids]
+        if type(uids) != list:
+            raise Exception("flow.add_process_next(list): not supported format")
+        framework = self.framework
+        user_id = self.config.uid(framework)
+        doc_id = self.doc_id
+        process = self.model.process.get(doc_id=doc_id, status='ready', user_id=user_id)
+        if process is None:
+            raise Exception("now allowed access")
+
+        draft = self.model.process.get(doc_id=doc_id, status="draft")
+        seq = int(process['seq']) + 1
+        for subseq in range(len(uids)):
+            uid = uids[subseq]
+            self.__create_process(user_id=uid, seq=seq, subseq=subseq, status="pending", data=draft["data"], response="")
+
     def draft(self, **data):
         if len(data.items()) == 0:
             return self.model.process.get(doc_id=self.doc_id, status="draft")
