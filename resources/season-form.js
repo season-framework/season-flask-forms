@@ -76,11 +76,9 @@ var season_form = function (form_id, doc_id, version) {
         }, 500);
     };
 
-    obj.api = function (name, data, cb) {
-        if (API.PROCESS[name.toUpperCase()])
-            fn(API.PROCESS[name.toUpperCase()], data, cb);
-        else
-            cb({ code: 404 });
+    obj.api = function (name, data, cb, opts) {
+        var url = baseurl + "/process/" + doc_id + "/" + name;
+        fn(url, data, cb, opts);
     };
 
     obj.draft = function (title, data, cb) {

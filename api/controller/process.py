@@ -16,7 +16,7 @@ class Controller(season.interfaces.form.controller.api):
         self.templateapi = self.model.template.api(form['theme'])
 
     def __default__(self, framework):
-        fn = framework.request.segment.get(0, None)
+        fn = framework.request.segment.get(1, None)
         if fn is not None:
             self.__templateapi(fn)
         framework.response.abort(404)
@@ -59,7 +59,6 @@ class Controller(season.interfaces.form.controller.api):
     # Approve
     def approve(self, framework):
         self.__templateapi("approve")
-        print("default process")
         response = framework.request.query("response", "")
         self.flow.response(response)
         self.flow.approve()
