@@ -117,6 +117,7 @@ class Model(season.core.interfaces.model.MySQL):
         return doc['approval_line']
 
     def create(self, form_id, form_version=None, user_id=None):
+        # form_version = "master"
         framework = self.framework   
         config = framework.config.load("form")
 

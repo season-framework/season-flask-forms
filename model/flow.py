@@ -12,7 +12,9 @@ class Model:
         self.model.process = framework.model("process", module="form")
         self.model.template = framework.model("template", module="form")
 
-    def init(self, doc_id, resp, user_id=None):
+    def init(self, doc_id, resp=None, user_id=None):
+        if resp is None:
+            resp = self.framework.response.status
         self = Model(self.framework)
         doc = self.doc = self.model.docs.data(doc_id, user_id=user_id)
         if doc is None: 
