@@ -36,8 +36,6 @@ var season_form = function (form_id, doc_id, version) {
         });
     }
 
-    obj.API = API;
-
     obj.cache = {};
 
     fn(API.DOC.DATA, {}, function (res) {
