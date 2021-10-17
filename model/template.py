@@ -53,15 +53,17 @@ class Model(season.core.interfaces.model.MySQL):
         template_css = str(template_css)
 
         view = f"""<script src='/resources/form/season-form.js'></script>
-        <script>var template_id = '{id}'; var sform = season_form('{form_id}', '{doc_id}', '{form_version}');</script>
+        <script type='text/javascript'><!--
+        var template_id = '{id}'; var sform = season_form('{form_id}', '{doc_id}', '{form_version}');
+        --></script>
 
         {template_pug}
         
-        <script>            
+        <script type='text/javascript'><!--
             {template_js}
-        </script>
+        --></script>
 
-        <script>
+        <script type='text/javascript'><!--
             function __init_{form_id}() {o}
                 {js};
                 try {o} 
@@ -71,7 +73,7 @@ class Model(season.core.interfaces.model.MySQL):
                 {e} 
             {e}; 
             __init_{form_id}();
-        </script>
+        --></script>
         
         <style>{template_css}</style>
         <style>{css}</style>

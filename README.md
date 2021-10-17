@@ -33,6 +33,7 @@ CREATE TABLE `form` (
   `updated` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `theme` varchar(32) NOT NULL DEFAULT '',
   `viewuri` text DEFAULT NULL,
+  `memo` varchar(64) DEFAULT NULL,
   PRIMARY KEY (`id`,`version`),
   KEY `title` (`title`),
   KEY `category` (`category`),

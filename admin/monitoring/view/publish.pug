@@ -24,6 +24,7 @@ mixin content()
                         th.text-center.width-2 Version
                         th.text-center.width-1 Category
                         th.text-center Title
+                        th.text-center Memo
                         th.text-center.width-1 Usage Count
                         th.text-center.width-2 Created
                         th.text-center.width-2
@@ -33,7 +34,8 @@ mixin content()
                         td.text-center.width-1 {{item.id}}
                         td.text-center.width-2 {{item.version}}
                         td.text-center.width-1 {{item.category}}
-                        td {{item.title}}
+                        td.text-center {{item.title}}
+                        td.text-center {{item.memo}}
                         td.text-center.width-1 {{item.usage_count}}
                         td.text-center.width-2 {{item.created.substring(0,10)}}
                         td.text-right.width-2
