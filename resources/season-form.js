@@ -84,10 +84,12 @@ var season_form = function (form_id, doc_id, version) {
         var url = baseurl + "/process/" + doc_id + "/" + name;
         fn(url, data, cb, opts);
     };
+
     obj.api.doc = function (name, data, cb, opts) {
         var url = baseurl + "/doc/" + doc_id + "/" + name;
         fn(url, data, cb, opts);
     };
+
     obj.api.template = function (name, data, cb, opts) {
         var url = baseurl + "/process/" + doc_id + "/" + name;
         fn(url, data, cb, opts);

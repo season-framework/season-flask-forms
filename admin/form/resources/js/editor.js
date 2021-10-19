@@ -144,7 +144,7 @@ var content_controller = function ($scope, $timeout, $sce) {
 
     // shortcut
     shortcutjs(window, {
-        'control s': function (ev) {
+        'Ctrl KeyS': function (ev) {
             ev.preventDefault();
             $scope.event.save();
         },
