@@ -46,7 +46,7 @@ mixin content()
                                 span.nav-link-title(style="font-size: 14px;") Delete
 
                         li.nav-item.p-0.pr-2
-                            a.nav-link.btn.btn-sm.text-dark.btn-white.btn-pill(ng-click="event.publish_modal()")
+                            a.nav-link.btn.btn-sm.text-dark.btn-white.btn-pill(ng-click="event.publish()")
                                 span.nav-link-title(style="font-size: 14px;") Publish
 
                         li.nav-item.p-0.pr-2
@@ -229,17 +229,6 @@ mixin content()
                         td.tab-5.text-right(ng-if="[5,6,7,8].includes(options.layout)")
                             +codeselect('tab5')
     
-    #modal-publish.modal.fade(tabindex="-1")
-        .modal-dialog.modal-sm(role='document')
-            .modal-content
-                .modal-body
-                    .modal-title Publish
-                    .p-3 
-                        input.form-control(type="text" ng-model="publish_memo")
-                .modal-footer
-                    button.btn.btn-link.link-secondary.mr-auto(type='button' data-dismiss='modal') Cancel
-                    button.btn.btn-dark(type='button' ng-click="event.publish()") Publish
-
     #modal-delete.modal.fade(tabindex="-1")
         .modal-dialog.modal-sm(role='document')
             .modal-content

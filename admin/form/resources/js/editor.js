@@ -79,15 +79,8 @@ var content_controller = function ($scope, $timeout, $sce) {
         });
     };
 
-    $scope.event.publish_modal = function () {  
-        $scope.publish_memo = "";
-        $timeout();
-        $('#modal-publish').modal('show');
-    }
-
-    $scope.event.publish = function (cb) {  
+    $scope.event.publish = function (cb) {
         var data = angular.copy($scope.info);
-        data.memo = $scope.publish_memo;
 
         $.post(API.PUBLISH, data, function (res) {
             $scope.event.iframe();

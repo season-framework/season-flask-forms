@@ -45,12 +45,9 @@ class Controller(season.interfaces.form.controller.admin_api):
         if 'id' not in _info or _info['id'] == 'new':
             self.status(400, "Bad Request")
         info = self.model.form.get(id=_info['id'], version="master")
+        
         info['version'] = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
         info['publish'] = "publish"
-        try:
-            info['memo'] = _info['memo']
-        except:
-            pass
         stat, _ = self.model.form.upsert(info)
 
         info['version'] = "master"

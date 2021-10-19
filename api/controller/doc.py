@@ -8,10 +8,17 @@ class Controller(season.interfaces.form.controller.api):
         self.framework = framework
 
     def __default__(self, framework):
+        doc_id = framework.request.segment.get(0, True)
+        fnname = framework.request.segment.get(1, None)
+        doc = self.model.docs.data(doc_id)
+        fn = self.model.docs.api(doc_id)
+        if fnname is not None:
+            if fnname in fn:
+                fn[fnname](framework, doc)
         framework.response.abort(404)
 
     def data(self, framework):
-        doc_id = framework.request.segment.get(0, True)            
+        doc_id = framework.request.segment.get(0, True)
         doc = self.model.docs.data(doc_id)
         if doc is None: self.status(404)
         self.status(200, doc)

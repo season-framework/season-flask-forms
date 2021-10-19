@@ -1,20 +1,20 @@
 mixin layout()
     doctype 5
-    include form/theme/component
+    include wiz/theme/component
 
     html(ng-app="app")
         head
             +header
             
-        body.antialiased
+        body.antialiased(ng-controller="content")
             script(src='/resources/theme/libs/tabler/dist/libs/bootstrap/dist/js/bootstrap.bundle.min.js')
             script(src='/resources/theme/libs/tabler/dist/libs/peity/jquery.peity.min.js')
             script(src='/resources/theme/libs/tabler/dist/js/tabler.min.js')
             script(src='/resources/wiz/theme/libs/monaco/min/vs/loader.js')
+            
             script.
-                require.config({ paths: { vs: '/resources/form/theme/libs/monaco/min/vs' } });
+                require.config({ paths: { vs: '/resources/wiz/theme/libs/monaco/min/vs' } });
 
-            div.page(ng-controller="content" ng-cloak)
-                +content
+            +content
 
             +builder
