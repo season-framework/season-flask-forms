@@ -143,14 +143,32 @@ var content_controller = function ($scope, $timeout, $sce) {
     });
 
     // shortcut
-    shortcutjs(window, {
-        'control s': function (ev) {
-            ev.preventDefault();
-            $scope.event.save();
-        },
-        'default': function (ev, name) {
+    var shortcuts = function () {
+        $(window).unbind();
+        shortcutjs(window, {
+            'Ctrl KeyS': function (ev) {
+                ev.preventDefault();
+                $scope.event.save();
+            },
+            'default': function (ev, name) {
+            }
+        });
+    }
+
+    shortcuts();
+    window.addEventListener("focus", shortcuts, false);
+
+    var premonaco = $scope.monaco;
+    $scope.monaco = function (language) {
+        var opt = premonaco(language);
+        opt.onLoad = function (editor) {
+            editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_S, function () {
+                $scope.event.save();
+                shortcuts();
+            });
         }
-    });
+        return opt;
+    }
 
     // drag event
     var dragbasewidth = 0;
